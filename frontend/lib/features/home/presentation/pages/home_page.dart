@@ -731,8 +731,18 @@ class _HomePageState extends State<HomePage> {
                     },
                   ),
 
-                  // Seller product management entry
-                  if (user.role == 'seller' || user.role == 'admin')
+                  // Seller entries
+                  if (user.role == 'seller' || user.role == 'admin') ...[
+                    ListTile(
+                      leading: const Icon(Icons.dashboard_outlined),
+                      title: const Text('Seller Dashboard'),
+                      subtitle: const Text('Overview, KPIs, orders & products'),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () {
+                        Navigator.pop(bottomSheetContext);
+                        context.push('/seller');
+                      },
+                    ),
                     ListTile(
                       leading: const Icon(Icons.storefront_rounded),
                       title: const Text('My Seller Inventory'),
@@ -743,6 +753,7 @@ class _HomePageState extends State<HomePage> {
                         context.push('/seller/products');
                       },
                     ),
+                  ],
 
                   ListTile(
                     leading: const Icon(

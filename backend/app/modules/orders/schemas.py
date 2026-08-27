@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.modules.orders.models import OrderStatus, PaymentStatus
+from app.modules.orders.models import FulfillmentStatus, OrderStatus, PaymentStatus
 
 
 class ShippingAddressInput(BaseModel):
@@ -45,6 +45,7 @@ class OrderItemRead(BaseModel):
     unit_price: Decimal
     quantity: int
     line_total: Decimal
+    fulfillment_status: FulfillmentStatus = FulfillmentStatus.PENDING
     created_at: datetime
 
 

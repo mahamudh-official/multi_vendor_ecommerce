@@ -54,6 +54,15 @@ import '../../features/wishlist/domain/usecases/clear_wishlist_usecase.dart';
 import '../../features/wishlist/domain/usecases/get_wishlist_usecase.dart';
 import '../../features/wishlist/domain/usecases/remove_from_wishlist_usecase.dart';
 import '../../features/wishlist/presentation/bloc/wishlist_bloc.dart';
+import '../../features/seller/data/datasources/seller_remote_datasource.dart';
+import '../../features/seller/data/repositories/seller_repository_impl.dart';
+import '../../features/seller/domain/repositories/seller_repository.dart';
+import '../../features/seller/domain/usecases/get_seller_dashboard_usecase.dart';
+import '../../features/seller/domain/usecases/seller_product_usecases.dart';
+import '../../features/seller/domain/usecases/seller_order_usecases.dart';
+import '../../features/seller/presentation/bloc/seller_dashboard/seller_dashboard_bloc.dart';
+import '../../features/seller/presentation/bloc/seller_products/seller_products_bloc.dart';
+import '../../features/seller/presentation/bloc/seller_orders/seller_orders_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -161,15 +170,11 @@ Future<void> configureDependencies() async {
 
   // ── Features: Category & Product Presentation (BLoCs) ────────────────────
   getIt.registerFactory<CategoryBloc>(
-    () => CategoryBloc(
-      getCategoriesUseCase: getIt<GetCategoriesUseCase>(),
-    ),
+    () => CategoryBloc(getCategoriesUseCase: getIt<GetCategoriesUseCase>()),
   );
 
   getIt.registerFactory<ProductBloc>(
-    () => ProductBloc(
-      getProductsUseCase: getIt<GetProductsUseCase>(),
-    ),
+    () => ProductBloc(getProductsUseCase: getIt<GetProductsUseCase>()),
   );
 
   getIt.registerFactory<SellerProductBloc>(
@@ -193,7 +198,9 @@ Future<void> configureDependencies() async {
     () => CartRepositoryImpl(remoteDataSource: getIt<CartRemoteDataSource>()),
   );
   getIt.registerLazySingleton<WishlistRepository>(
-    () => WishlistRepositoryImpl(remoteDataSource: getIt<WishlistRemoteDataSource>()),
+    () => WishlistRepositoryImpl(
+      remoteDataSource: getIt<WishlistRemoteDataSource>(),
+    ),
   );
 
   // ── Features: Cart & Wishlist Domain Layer (Use Cases) ───────────────────
@@ -276,6 +283,68 @@ Future<void> configureDependencies() async {
       getOrdersUseCase: getIt<GetOrdersUseCase>(),
       getOrderDetailsUseCase: getIt<GetOrderDetailsUseCase>(),
       cancelOrderUseCase: getIt<CancelOrderUseCase>(),
+    ),
+  );
+
+  // ── Features: Seller Data Layer ───────────────────────────────────────────
+  getIt.registerLazySingleton<SellerRemoteDataSource>(
+    () => SellerRemoteDataSourceImpl(dioClient: getIt<DioClient>()),
+  );
+
+  getIt.registerLazySingleton<SellerRepository>(
+    () =>
+        SellerRepositoryImpl(remoteDataSource: getIt<SellerRemoteDataSource>()),
+  );
+
+  // ── Features: Seller Domain Layer (Use Cases) ─────────────────────────────
+  getIt.registerLazySingleton<GetSellerDashboardUseCase>(
+    () => GetSellerDashboardUseCase(getIt<SellerRepository>()),
+  );
+  getIt.registerLazySingleton<GetSellerProductsUseCase>(
+    () => GetSellerProductsUseCase(getIt<SellerRepository>()),
+  );
+  getIt.registerLazySingleton<GetSellerProductUseCase>(
+    () => GetSellerProductUseCase(getIt<SellerRepository>()),
+  );
+  getIt.registerLazySingleton<CreateSellerProductUseCase>(
+    () => CreateSellerProductUseCase(getIt<SellerRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateSellerProductUseCase>(
+    () => UpdateSellerProductUseCase(getIt<SellerRepository>()),
+  );
+  getIt.registerLazySingleton<DeactivateSellerProductUseCase>(
+    () => DeactivateSellerProductUseCase(getIt<SellerRepository>()),
+  );
+  getIt.registerLazySingleton<GetSellerOrdersUseCase>(
+    () => GetSellerOrdersUseCase(getIt<SellerRepository>()),
+  );
+  getIt.registerLazySingleton<GetSellerOrderDetailsUseCase>(
+    () => GetSellerOrderDetailsUseCase(getIt<SellerRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateSellerOrderStatusUseCase>(
+    () => UpdateSellerOrderStatusUseCase(getIt<SellerRepository>()),
+  );
+
+  // ── Features: Seller Presentation Layer (BLoCs) ───────────────────────────
+  getIt.registerFactory<SellerDashboardBloc>(
+    () => SellerDashboardBloc(
+      getDashboardUseCase: getIt<GetSellerDashboardUseCase>(),
+    ),
+  );
+  getIt.registerFactory<SellerProductsBloc>(
+    () => SellerProductsBloc(
+      getProductsUseCase: getIt<GetSellerProductsUseCase>(),
+      getProductUseCase: getIt<GetSellerProductUseCase>(),
+      createProductUseCase: getIt<CreateSellerProductUseCase>(),
+      updateProductUseCase: getIt<UpdateSellerProductUseCase>(),
+      deactivateProductUseCase: getIt<DeactivateSellerProductUseCase>(),
+    ),
+  );
+  getIt.registerFactory<SellerOrdersBloc>(
+    () => SellerOrdersBloc(
+      getOrdersUseCase: getIt<GetSellerOrdersUseCase>(),
+      getOrderDetailsUseCase: getIt<GetSellerOrderDetailsUseCase>(),
+      updateOrderStatusUseCase: getIt<UpdateSellerOrderStatusUseCase>(),
     ),
   );
 }

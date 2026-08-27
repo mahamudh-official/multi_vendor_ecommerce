@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.auth.models import User, UserRole
 from app.modules.cart.repository import CartRepository
-from app.modules.orders.models import Order, OrderItem, OrderStatus, PaymentStatus
+from app.modules.orders.models import FulfillmentStatus, Order, OrderItem, OrderStatus, PaymentStatus
 from app.modules.orders.repository import OrderRepository
 from app.modules.orders.schemas import (
     CheckoutRequest,
@@ -253,12 +253,13 @@ class OrderService:
             )
 
         try:
-            # Restore stock for each item in the order
+            # Restore stock for each item in the order and set item fulfillment status
             for item in order.items:
                 await self.order_repo.atomic_increment_stock(
                     product_id=item.product_id,
                     quantity=item.quantity,
                 )
+                item.fulfillment_status = FulfillmentStatus.CANCELLED
 
             order.status = OrderStatus.CANCELLED
             await self.session.commit()
@@ -319,6 +320,7 @@ class OrderService:
                 unit_price=item.unit_price,
                 quantity=item.quantity,
                 line_total=item.line_total,
+                fulfillment_status=item.fulfillment_status,
                 created_at=item.created_at,
             )
             for item in order.items

@@ -13,13 +13,16 @@ import '../features/orders/presentation/bloc/order_event.dart';
 import '../features/products/presentation/bloc/category/category_bloc.dart';
 import '../features/products/presentation/bloc/product/product_bloc.dart';
 import '../features/products/presentation/bloc/seller/seller_product_bloc.dart';
+import '../features/seller/presentation/bloc/seller_dashboard/seller_dashboard_bloc.dart';
+import '../features/seller/presentation/bloc/seller_orders/seller_orders_bloc.dart';
+import '../features/seller/presentation/bloc/seller_products/seller_products_bloc.dart';
 import '../features/wishlist/presentation/bloc/wishlist_bloc.dart';
 import '../features/wishlist/presentation/bloc/wishlist_event.dart';
 
 /// Root application widget.
 ///
 /// Wires together:
-/// - MultiBlocProvider (AuthBloc, CategoryBloc, ProductBloc, SellerProductBloc, CartBloc, WishlistBloc, OrderBloc)
+/// - MultiBlocProvider (Auth, Catalog, Cart, Wishlist, Order, Seller BLoCs)
 /// - go_router (declarative routing)
 /// - Material 3 light / dark theme
 class MarketoApp extends StatelessWidget {
@@ -36,6 +39,9 @@ class MarketoApp extends StatelessWidget {
         BlocProvider<CartBloc>(create: (_) => getIt<CartBloc>()),
         BlocProvider<WishlistBloc>(create: (_) => getIt<WishlistBloc>()),
         BlocProvider<OrderBloc>(create: (_) => getIt<OrderBloc>()),
+        BlocProvider<SellerDashboardBloc>(create: (_) => getIt<SellerDashboardBloc>()),
+        BlocProvider<SellerProductsBloc>(create: (_) => getIt<SellerProductsBloc>()),
+        BlocProvider<SellerOrdersBloc>(create: (_) => getIt<SellerOrdersBloc>()),
       ],
       child: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
@@ -46,6 +52,9 @@ class MarketoApp extends StatelessWidget {
             context.read<CartBloc>().add(const CartReset());
             context.read<WishlistBloc>().add(const WishlistReset());
             context.read<OrderBloc>().add(const OrdersReset());
+            context.read<SellerDashboardBloc>().add(const SellerDashboardReset());
+            context.read<SellerProductsBloc>().add(const SellerProductsReset());
+            context.read<SellerOrdersBloc>().add(const SellerOrdersReset());
           }
         },
         child: MaterialApp.router(

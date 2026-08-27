@@ -8,11 +8,13 @@ import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/orders/presentation/pages/checkout_page.dart';
 import '../../features/orders/presentation/pages/order_details_page.dart';
 import '../../features/orders/presentation/pages/orders_page.dart';
-import '../../features/products/domain/entities/product.dart';
-import '../../features/products/presentation/pages/create_product_page.dart';
-import '../../features/products/presentation/pages/edit_product_page.dart';
 import '../../features/products/presentation/pages/product_details_page.dart';
-import '../../features/products/presentation/pages/seller_products_page.dart';
+import '../../features/seller/presentation/pages/create_product_page.dart';
+import '../../features/seller/presentation/pages/edit_product_page.dart';
+import '../../features/seller/presentation/pages/seller_dashboard_page.dart';
+import '../../features/seller/presentation/pages/seller_order_details_page.dart';
+import '../../features/seller/presentation/pages/seller_orders_page.dart';
+import '../../features/seller/presentation/pages/seller_products_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/wishlist/presentation/pages/wishlist_page.dart';
 
@@ -31,9 +33,14 @@ abstract final class AppRoutes {
   static const String orders = '/orders';
   static const String orderDetails = '/orders/:id';
   static const String productDetails = '/products/:id';
+
+  // Seller Portal Routes
+  static const String seller = '/seller';
   static const String sellerProducts = '/seller/products';
   static const String sellerProductCreate = '/seller/products/create';
   static const String sellerProductEdit = '/seller/products/:id/edit';
+  static const String sellerOrders = '/seller/orders';
+  static const String sellerOrderDetails = '/seller/orders/:id';
 }
 
 /// Application router configuration using go_router.
@@ -168,18 +175,38 @@ final GoRouter appRouter = GoRouter(
       },
     ),
 
-    // ── Seller Inventory Management ──────────────────────────────────────
+    // ── Seller Dashboard ─────────────────────────────────────────────────
     GoRoute(
-      path: AppRoutes.sellerProducts,
-      name: 'seller-products',
+      path: AppRoutes.seller,
+      name: 'seller-dashboard',
       pageBuilder: (context, state) => CustomTransitionPage(
         key: state.pageKey,
-        child: const SellerProductsPage(),
+        child: const SellerDashboardPage(),
         transitionsBuilder: _slideRightTransition,
       ),
     ),
 
-    // ── Create Product ───────────────────────────────────────────────────
+    // ── Seller Products List ─────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.sellerProducts,
+      name: 'seller-products',
+      pageBuilder: (context, state) {
+        final lowStock = state.uri.queryParameters['low_stock'] == 'true';
+        final isActiveStr = state.uri.queryParameters['is_active'];
+        final isActive = isActiveStr != null ? isActiveStr == 'true' : null;
+
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: SellerProductsPage(
+            initialLowStock: lowStock ? true : null,
+            initialIsActive: isActive,
+          ),
+          transitionsBuilder: _slideRightTransition,
+        );
+      },
+    ),
+
+    // ── Create Seller Product ────────────────────────────────────────────
     GoRoute(
       path: AppRoutes.sellerProductCreate,
       name: 'seller-product-create',
@@ -190,15 +217,43 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
 
-    // ── Edit Product ─────────────────────────────────────────────────────
+    // ── Edit Seller Product ──────────────────────────────────────────────
     GoRoute(
       path: AppRoutes.sellerProductEdit,
       name: 'seller-product-edit',
       pageBuilder: (context, state) {
-        final product = state.extra as Product;
+        final id = state.pathParameters['id'] ?? '';
         return CustomTransitionPage(
           key: state.pageKey,
-          child: EditProductPage(product: product),
+          child: EditProductPage(productId: id),
+          transitionsBuilder: _slideRightTransition,
+        );
+      },
+    ),
+
+    // ── Seller Orders List ───────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.sellerOrders,
+      name: 'seller-orders',
+      pageBuilder: (context, state) {
+        final status = state.uri.queryParameters['status'];
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: SellerOrdersPage(initialStatus: status),
+          transitionsBuilder: _slideRightTransition,
+        );
+      },
+    ),
+
+    // ── Seller Order Details ─────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.sellerOrderDetails,
+      name: 'seller-order-details',
+      pageBuilder: (context, state) {
+        final id = state.pathParameters['id'] ?? '';
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: SellerOrderDetailsPage(orderId: id),
           transitionsBuilder: _slideRightTransition,
         );
       },

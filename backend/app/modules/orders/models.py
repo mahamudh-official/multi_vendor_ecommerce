@@ -38,6 +38,15 @@ class PaymentStatus(str, enum.Enum):
     REFUNDED = "refunded"
 
 
+class FulfillmentStatus(str, enum.Enum):
+    PENDING = "pending"
+    CONFIRMED = "confirmed"
+    PROCESSING = "processing"
+    SHIPPED = "shipped"
+    DELIVERED = "delivered"
+    CANCELLED = "cancelled"
+
+
 class Order(Base):
     __tablename__ = "orders"
 
@@ -185,6 +194,18 @@ class OrderItem(Base):
     unit_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     line_total: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+
+    fulfillment_status: Mapped[FulfillmentStatus] = mapped_column(
+        SAEnum(
+            FulfillmentStatus,
+            name="fulfillmentstatus",
+            values_callable=lambda x: [e.value for e in x],
+        ),
+        default=FulfillmentStatus.PENDING,
+        server_default="pending",
+        nullable=False,
+        index=True,
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
