@@ -33,6 +33,11 @@ class ForbiddenException(AppException):
         super().__init__(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
 
 
+class BadRequestException(AppException):
+    def __init__(self, detail: str = "Bad request.") -> None:
+        super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
+
+
 class ConflictException(AppException):
     def __init__(self, detail: str = "Resource already exists.") -> None:
         super().__init__(status_code=status.HTTP_409_CONFLICT, detail=detail)

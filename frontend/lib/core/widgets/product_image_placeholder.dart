@@ -11,13 +11,42 @@ class ProductImagePlaceholder extends StatelessWidget {
   const ProductImagePlaceholder({
     super.key,
     this.size = 80,
-    this.icon = Icons.shopping_bag_outlined,
+    this.icon,
+    this.categoryName,
     this.borderRadius,
   });
 
   final double size;
-  final IconData icon;
+  final IconData? icon;
+  final String? categoryName;
   final double? borderRadius;
+
+  IconData _resolveIcon() {
+    if (icon != null) return icon!;
+    final name = categoryName?.toLowerCase() ?? '';
+    if (name.contains('electron') ||
+        name.contains('tech') ||
+        name.contains('gadget')) {
+      return Icons.devices_rounded;
+    }
+    if (name.contains('fashion') ||
+        name.contains('cloth') ||
+        name.contains('apparel')) {
+      return Icons.checkroom_rounded;
+    }
+    if (name.contains('home') ||
+        name.contains('garden') ||
+        name.contains('furnit')) {
+      return Icons.chair_outlined;
+    }
+    if (name.contains('book')) {
+      return Icons.menu_book_rounded;
+    }
+    if (name.contains('toy') || name.contains('game')) {
+      return Icons.sports_esports_outlined;
+    }
+    return Icons.shopping_bag_outlined;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,12 +61,14 @@ class ProductImagePlaceholder extends StatelessWidget {
             : AppColorsLight.surfaceContainer,
         borderRadius: BorderRadius.circular(borderRadius ?? AppRadius.md),
       ),
-      child: Icon(
-        icon,
-        size: size * 0.4,
-        color: isDark
-            ? AppColorsDark.onSurfaceVariant
-            : AppColorsLight.onSurfaceVariant,
+      child: Center(
+        child: Icon(
+          _resolveIcon(),
+          size: size * 0.4,
+          color: isDark
+              ? AppColorsDark.onSurfaceVariant
+              : AppColorsLight.onSurfaceVariant,
+        ),
       ),
     );
   }
