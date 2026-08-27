@@ -1,0 +1,92 @@
+# ============================================================
+# MULTI-VENDOR MARKETPLACE — MONOREPO .gitignore
+# ============================================================
+
+# ------ SECRETS / ENVIRONMENT ------
+.env
+.env.local
+.env.*.local
+*.secret
+secrets/
+
+# ------ FLUTTER / DART ------
+frontend/.dart_tool/
+frontend/build/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.packages
+frontend/.pub-cache/
+frontend/.pub/
+frontend/pubspec.lock
+frontend/**/*.g.dart
+frontend/**/*.freezed.dart
+frontend/**/*.mocks.dart
+
+# iOS / macOS
+frontend/ios/Pods/
+frontend/ios/.symlinks/
+frontend/ios/Flutter/.last_build_id
+frontend/macos/Pods/
+frontend/macos/.symlinks/
+
+# Android
+frontend/android/.gradle/
+frontend/android/local.properties
+frontend/android/captures/
+frontend/android/gradlew
+frontend/android/gradlew.bat
+frontend/android/gradle/
+frontend/android/key.properties
+frontend/**/*.keystore
+frontend/**/*.jks
+
+# Web
+frontend/web/flutter_bootstrap.js
+
+# ------ PYTHON / FASTAPI ------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/venv/
+backend/.venv/
+backend/env/
+backend/.env
+backend/*.egg-info/
+backend/dist/
+backend/build/
+backend/.eggs/
+*.egg
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+backend/alembic/versions/*.pyc
+
+# ------ DOCKER ------
+.docker/
+
+# ------ IDE / EDITORS ------
+.idea/
+.vscode/
+*.swp
+*.swo
+*.iml
+*.suo
+*.user
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ------ OS ------
+.DS_Store
+.AppleDouble
+.LSOverride
+ehthumbs.db
+Thumbs.db
+
+# ------ NODE (if tooling added later) ------
+node_modules/
+npm-debug.log*

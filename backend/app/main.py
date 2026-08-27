@@ -1,0 +1,97 @@
+"""
+FastAPI application entry point.
+"""
+import logging
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+
+from app.common.exceptions.handlers import register_exception_handlers
+from app.core.config import get_settings
+from app.core.database import AsyncSessionLocal, engine
+from app.modules.auth.router import router as auth_router
+
+logger = logging.getLogger(__name__)
+settings = get_settings()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Application lifespan handler.
+
+    On startup: verify database connectivity (no schema creation — use Alembic).
+    On shutdown: dispose database engine.
+    """
+    # ── Startup ────────────────────────────────────────────────────────────
+    logger.info("Starting %s v%s", settings.app_name, settings.app_version)
+    logger.info("Environment: %s", settings.environment)
+
+    # Verify database connection only — do NOT create tables here.
+    # Run `alembic upgrade head` to apply migrations.
+    try:
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(text("SELECT 1"))
+            row = result.scalar()
+            if row == 1:
+                logger.info("✅ Database connection verified.")
+            else:
+                logger.error("❌ Database connectivity check returned unexpected result.")
+    except Exception as exc:  # noqa: BLE001
+        logger.error("❌ Database connection failed: %s", exc)
+        # Do not raise — let the app start anyway so /health can report status.
+
+    yield
+
+    # ── Shutdown ───────────────────────────────────────────────────────────
+    logger.info("Shutting down — disposing database engine.")
+    await engine.dispose()
+
+
+# ── Application ────────────────────────────────────────────────────────────
+app = FastAPI(
+    title=settings.app_name,
+    version=settings.app_version,
+    description="Production-quality multi-vendor marketplace REST API.",
+    lifespan=lifespan,
+    docs_url="/docs" if settings.is_development else None,
+    redoc_url="/redoc" if settings.is_development else None,
+)
+
+# ── Middleware ─────────────────────────────────────────────────────────────
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ── Exception Handlers ─────────────────────────────────────────────────────
+register_exception_handlers(app)
+
+# ── Routers ────────────────────────────────────────────────────────────────
+app.include_router(auth_router, prefix="/api/v1")
+
+
+# ── Health Check ───────────────────────────────────────────────────────────
+@app.get("/health", tags=["health"], summary="Health check")
+async def health_check() -> dict:
+    """
+    Verify the API is running.
+
+    Returns service status and version information.
+    """
+    return {
+        "status": "ok",
+        "service": settings.app_name,
+        "version": settings.app_version,
+        "environment": settings.environment,
+    }
+
+
+@app.get("/", tags=["root"], include_in_schema=False)
+async def root() -> dict:
+    return {"message": f"Welcome to {settings.app_name}", "docs": "/docs"}
