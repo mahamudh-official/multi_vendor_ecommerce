@@ -5,6 +5,9 @@ import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/cart/presentation/pages/cart_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
+import '../../features/orders/presentation/pages/checkout_page.dart';
+import '../../features/orders/presentation/pages/order_details_page.dart';
+import '../../features/orders/presentation/pages/orders_page.dart';
 import '../../features/products/domain/entities/product.dart';
 import '../../features/products/presentation/pages/create_product_page.dart';
 import '../../features/products/presentation/pages/edit_product_page.dart';
@@ -21,9 +24,12 @@ abstract final class AppRoutes {
   static const String welcome = '/welcome';
   static const String login = '/auth/login';
   static const String register = '/auth/register';
-  static const String home = '/';
+  static const String home = '/home';
   static const String cart = '/cart';
   static const String wishlist = '/wishlist';
+  static const String checkout = '/checkout';
+  static const String orders = '/orders';
+  static const String orderDetails = '/orders/:id';
   static const String productDetails = '/products/:id';
   static const String sellerProducts = '/seller/products';
   static const String sellerProductCreate = '/seller/products/create';
@@ -110,6 +116,42 @@ final GoRouter appRouter = GoRouter(
         child: const WishlistPage(),
         transitionsBuilder: _slideRightTransition,
       ),
+    ),
+
+    // ── Checkout ─────────────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.checkout,
+      name: 'checkout',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const CheckoutPage(),
+        transitionsBuilder: _slideRightTransition,
+      ),
+    ),
+
+    // ── Order History ────────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.orders,
+      name: 'orders',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const OrdersPage(),
+        transitionsBuilder: _slideRightTransition,
+      ),
+    ),
+
+    // ── Order Details ────────────────────────────────────────────────────
+    GoRoute(
+      path: '/orders/:id',
+      name: 'order-details',
+      pageBuilder: (context, state) {
+        final id = state.pathParameters['id'] ?? '';
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: OrderDetailsPage(orderId: id),
+          transitionsBuilder: _slideRightTransition,
+        );
+      },
     ),
 
     // ── Product Details ──────────────────────────────────────────────────

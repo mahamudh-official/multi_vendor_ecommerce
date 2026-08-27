@@ -537,25 +537,15 @@ class _CartPageState extends State<CartPage> {
             ),
             const SizedBox(height: AppSpacing.md),
 
-            // ── Checkout Button (Clearly structured placeholder for Step 5)
+            // ── Checkout Button ───────────────────────────────────────────
             SizedBox(
               width: double.infinity,
               height: 52,
               child: FilledButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Checkout & Payments will be unlocked in Step 5.',
-                      ),
-                      duration: Duration(seconds: 2),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.lock_outline_rounded),
+                onPressed: () => context.push('/checkout'),
+                icon: const Icon(Icons.arrow_forward_rounded),
                 label: const Text(
-                  'Proceed to Checkout (Step 5)',
+                  'Proceed to Checkout',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),

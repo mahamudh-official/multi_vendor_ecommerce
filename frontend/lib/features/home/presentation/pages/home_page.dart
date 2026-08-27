@@ -717,6 +717,20 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: AppSpacing.xl),
                   const Divider(),
 
+                  // Orders entry
+                  ListTile(
+                    leading: const Icon(Icons.receipt_long_outlined),
+                    title: const Text('My Orders'),
+                    subtitle: const Text(
+                      'Track active orders & view purchase history',
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () {
+                      Navigator.pop(bottomSheetContext);
+                      context.push('/orders');
+                    },
+                  ),
+
                   // Seller product management entry
                   if (user.role == 'seller' || user.role == 'admin')
                     ListTile(

@@ -25,6 +25,7 @@ from app.core.database import Base  # noqa: E402
 from app.modules.auth import models as auth_models  # noqa: E402, F401
 from app.modules.products import models as product_models  # noqa: E402, F401
 from app.modules.cart import models as cart_models  # noqa: E402, F401
+from app.modules.orders import models as order_models  # noqa: E402, F401
 
 # ── Alembic Config ────────────────────────────────────────────────────────────
 config = context.config

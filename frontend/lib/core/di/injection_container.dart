@@ -23,6 +23,14 @@ import '../../features/cart/domain/usecases/get_cart_usecase.dart';
 import '../../features/cart/domain/usecases/remove_cart_item_usecase.dart';
 import '../../features/cart/domain/usecases/update_cart_item_usecase.dart';
 import '../../features/cart/presentation/bloc/cart_bloc.dart';
+import '../../features/orders/data/datasources/order_remote_datasource.dart';
+import '../../features/orders/data/repositories/order_repository_impl.dart';
+import '../../features/orders/domain/repositories/order_repository.dart';
+import '../../features/orders/domain/usecases/cancel_order_usecase.dart';
+import '../../features/orders/domain/usecases/checkout_usecase.dart';
+import '../../features/orders/domain/usecases/get_order_details_usecase.dart';
+import '../../features/orders/domain/usecases/get_orders_usecase.dart';
+import '../../features/orders/presentation/bloc/order_bloc.dart';
 import '../../features/products/data/datasources/category_remote_datasource.dart';
 import '../../features/products/data/datasources/product_remote_datasource.dart';
 import '../../features/products/data/repositories/category_repository_impl.dart';
@@ -153,11 +161,15 @@ Future<void> configureDependencies() async {
 
   // ── Features: Category & Product Presentation (BLoCs) ────────────────────
   getIt.registerFactory<CategoryBloc>(
-    () => CategoryBloc(getCategoriesUseCase: getIt<GetCategoriesUseCase>()),
+    () => CategoryBloc(
+      getCategoriesUseCase: getIt<GetCategoriesUseCase>(),
+    ),
   );
 
   getIt.registerFactory<ProductBloc>(
-    () => ProductBloc(getProductsUseCase: getIt<GetProductsUseCase>()),
+    () => ProductBloc(
+      getProductsUseCase: getIt<GetProductsUseCase>(),
+    ),
   );
 
   getIt.registerFactory<SellerProductBloc>(
@@ -181,9 +193,7 @@ Future<void> configureDependencies() async {
     () => CartRepositoryImpl(remoteDataSource: getIt<CartRemoteDataSource>()),
   );
   getIt.registerLazySingleton<WishlistRepository>(
-    () => WishlistRepositoryImpl(
-      remoteDataSource: getIt<WishlistRemoteDataSource>(),
-    ),
+    () => WishlistRepositoryImpl(remoteDataSource: getIt<WishlistRemoteDataSource>()),
   );
 
   // ── Features: Cart & Wishlist Domain Layer (Use Cases) ───────────────────
@@ -233,6 +243,39 @@ Future<void> configureDependencies() async {
       addToWishlistUseCase: getIt<AddToWishlistUseCase>(),
       removeFromWishlistUseCase: getIt<RemoveFromWishlistUseCase>(),
       clearWishlistUseCase: getIt<ClearWishlistUseCase>(),
+    ),
+  );
+
+  // ── Features: Orders Data Layer ──────────────────────────────────────────
+  getIt.registerLazySingleton<OrderRemoteDataSource>(
+    () => OrderRemoteDataSourceImpl(dioClient: getIt<DioClient>()),
+  );
+
+  getIt.registerLazySingleton<OrderRepository>(
+    () => OrderRepositoryImpl(remoteDataSource: getIt<OrderRemoteDataSource>()),
+  );
+
+  // ── Features: Orders Domain Layer (Use Cases) ────────────────────────────
+  getIt.registerLazySingleton<CheckoutUseCase>(
+    () => CheckoutUseCase(getIt<OrderRepository>()),
+  );
+  getIt.registerLazySingleton<GetOrdersUseCase>(
+    () => GetOrdersUseCase(getIt<OrderRepository>()),
+  );
+  getIt.registerLazySingleton<GetOrderDetailsUseCase>(
+    () => GetOrderDetailsUseCase(getIt<OrderRepository>()),
+  );
+  getIt.registerLazySingleton<CancelOrderUseCase>(
+    () => CancelOrderUseCase(getIt<OrderRepository>()),
+  );
+
+  // ── Features: Orders Presentation (BLoCs) ────────────────────────────────
+  getIt.registerFactory<OrderBloc>(
+    () => OrderBloc(
+      checkoutUseCase: getIt<CheckoutUseCase>(),
+      getOrdersUseCase: getIt<GetOrdersUseCase>(),
+      getOrderDetailsUseCase: getIt<GetOrderDetailsUseCase>(),
+      cancelOrderUseCase: getIt<CancelOrderUseCase>(),
     ),
   );
 }
