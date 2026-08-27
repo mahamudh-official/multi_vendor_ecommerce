@@ -1,6 +1,9 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 
+import '../network/auth_interceptor.dart';
+import '../network/dio_client.dart';
+import '../storage/secure_storage_service.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
@@ -11,6 +14,15 @@ import '../../features/auth/domain/usecases/logout_usecase.dart';
 import '../../features/auth/domain/usecases/refresh_token_usecase.dart';
 import '../../features/auth/domain/usecases/register_usecase.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/cart/data/datasources/cart_remote_datasource.dart';
+import '../../features/cart/data/repositories/cart_repository_impl.dart';
+import '../../features/cart/domain/repositories/cart_repository.dart';
+import '../../features/cart/domain/usecases/add_to_cart_usecase.dart';
+import '../../features/cart/domain/usecases/clear_cart_usecase.dart';
+import '../../features/cart/domain/usecases/get_cart_usecase.dart';
+import '../../features/cart/domain/usecases/remove_cart_item_usecase.dart';
+import '../../features/cart/domain/usecases/update_cart_item_usecase.dart';
+import '../../features/cart/presentation/bloc/cart_bloc.dart';
 import '../../features/products/data/datasources/category_remote_datasource.dart';
 import '../../features/products/data/datasources/product_remote_datasource.dart';
 import '../../features/products/data/repositories/category_repository_impl.dart';
@@ -26,32 +38,41 @@ import '../../features/products/domain/usecases/update_product_usecase.dart';
 import '../../features/products/presentation/bloc/category/category_bloc.dart';
 import '../../features/products/presentation/bloc/product/product_bloc.dart';
 import '../../features/products/presentation/bloc/seller/seller_product_bloc.dart';
-import '../network/auth_interceptor.dart';
-import '../network/dio_client.dart';
-import '../storage/secure_storage_service.dart';
+import '../../features/wishlist/data/datasources/wishlist_remote_datasource.dart';
+import '../../features/wishlist/data/repositories/wishlist_repository_impl.dart';
+import '../../features/wishlist/domain/repositories/wishlist_repository.dart';
+import '../../features/wishlist/domain/usecases/add_to_wishlist_usecase.dart';
+import '../../features/wishlist/domain/usecases/clear_wishlist_usecase.dart';
+import '../../features/wishlist/domain/usecases/get_wishlist_usecase.dart';
+import '../../features/wishlist/domain/usecases/remove_from_wishlist_usecase.dart';
+import '../../features/wishlist/presentation/bloc/wishlist_bloc.dart';
 
-/// Global service locator instance.
-final GetIt getIt = GetIt.instance;
+final getIt = GetIt.instance;
 
-/// Register all application dependencies.
-/// Call this once from [main] before [runApp].
+/// Initialize all service locator registrations.
 Future<void> configureDependencies() async {
-  // ── Core: Secure Storage ─────────────────────────────────────────────────
-  const flutterSecureStorage = FlutterSecureStorage();
-  final secureStorageService = const SecureStorageService(flutterSecureStorage);
-  getIt.registerLazySingleton<SecureStorageService>(() => secureStorageService);
+  // ── Core / Infrastructure ──────────────────────────────────────────────────
+  getIt.registerLazySingleton<FlutterSecureStorage>(
+    () => const FlutterSecureStorage(),
+  );
 
-  // ── Core: Network ────────────────────────────────────────────────────────
-  final dioClient = DioClient();
-  dioClient.addInterceptor(
-    AuthInterceptor(
-      secureStorage: secureStorageService,
-      dio: dioClient.client,
+  getIt.registerLazySingleton<SecureStorageService>(
+    () => SecureStorageService(getIt<FlutterSecureStorage>()),
+  );
+
+  getIt.registerLazySingleton<DioClient>(() => DioClient());
+
+  getIt.registerLazySingleton<AuthInterceptor>(
+    () => AuthInterceptor(
+      secureStorage: getIt<SecureStorageService>(),
+      dio: getIt<DioClient>().client,
     ),
   );
-  getIt.registerLazySingleton<DioClient>(() => dioClient);
 
-  // ── Features: Auth Layer ─────────────────────────────────────────────────
+  // Attach auth interceptor to DioClient
+  getIt<DioClient>().addInterceptor(getIt<AuthInterceptor>());
+
+  // ── Feature: Auth Data Layer ───────────────────────────────────────────────
   getIt.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(getIt<DioClient>()),
   );
@@ -64,6 +85,7 @@ Future<void> configureDependencies() async {
     ),
   );
 
+  // ── Feature: Auth Domain Layer (Use Cases) ─────────────────────────────────
   getIt.registerLazySingleton<RegisterUseCase>(
     () => RegisterUseCase(getIt<AuthRepository>()),
   );
@@ -83,7 +105,7 @@ Future<void> configureDependencies() async {
     () => CheckAuthStatusUseCase(getIt<AuthRepository>()),
   );
 
-  getIt.registerFactory<AuthBloc>(
+  getIt.registerLazySingleton<AuthBloc>(
     () => AuthBloc(
       checkAuthStatusUseCase: getIt<CheckAuthStatusUseCase>(),
       getCurrentUserUseCase: getIt<GetCurrentUserUseCase>(),
@@ -131,15 +153,11 @@ Future<void> configureDependencies() async {
 
   // ── Features: Category & Product Presentation (BLoCs) ────────────────────
   getIt.registerFactory<CategoryBloc>(
-    () => CategoryBloc(
-      getCategoriesUseCase: getIt<GetCategoriesUseCase>(),
-    ),
+    () => CategoryBloc(getCategoriesUseCase: getIt<GetCategoriesUseCase>()),
   );
 
   getIt.registerFactory<ProductBloc>(
-    () => ProductBloc(
-      getProductsUseCase: getIt<GetProductsUseCase>(),
-    ),
+    () => ProductBloc(getProductsUseCase: getIt<GetProductsUseCase>()),
   );
 
   getIt.registerFactory<SellerProductBloc>(
@@ -148,6 +166,73 @@ Future<void> configureDependencies() async {
       createProductUseCase: getIt<CreateProductUseCase>(),
       updateProductUseCase: getIt<UpdateProductUseCase>(),
       deleteProductUseCase: getIt<DeleteProductUseCase>(),
+    ),
+  );
+
+  // ── Features: Cart & Wishlist Data Layer ─────────────────────────────────
+  getIt.registerLazySingleton<CartRemoteDataSource>(
+    () => CartRemoteDataSourceImpl(dioClient: getIt<DioClient>()),
+  );
+  getIt.registerLazySingleton<WishlistRemoteDataSource>(
+    () => WishlistRemoteDataSourceImpl(dioClient: getIt<DioClient>()),
+  );
+
+  getIt.registerLazySingleton<CartRepository>(
+    () => CartRepositoryImpl(remoteDataSource: getIt<CartRemoteDataSource>()),
+  );
+  getIt.registerLazySingleton<WishlistRepository>(
+    () => WishlistRepositoryImpl(
+      remoteDataSource: getIt<WishlistRemoteDataSource>(),
+    ),
+  );
+
+  // ── Features: Cart & Wishlist Domain Layer (Use Cases) ───────────────────
+  getIt.registerLazySingleton<GetCartUseCase>(
+    () => GetCartUseCase(getIt<CartRepository>()),
+  );
+  getIt.registerLazySingleton<AddToCartUseCase>(
+    () => AddToCartUseCase(getIt<CartRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateCartItemUseCase>(
+    () => UpdateCartItemUseCase(getIt<CartRepository>()),
+  );
+  getIt.registerLazySingleton<RemoveCartItemUseCase>(
+    () => RemoveCartItemUseCase(getIt<CartRepository>()),
+  );
+  getIt.registerLazySingleton<ClearCartUseCase>(
+    () => ClearCartUseCase(getIt<CartRepository>()),
+  );
+
+  getIt.registerLazySingleton<GetWishlistUseCase>(
+    () => GetWishlistUseCase(getIt<WishlistRepository>()),
+  );
+  getIt.registerLazySingleton<AddToWishlistUseCase>(
+    () => AddToWishlistUseCase(getIt<WishlistRepository>()),
+  );
+  getIt.registerLazySingleton<RemoveFromWishlistUseCase>(
+    () => RemoveFromWishlistUseCase(getIt<WishlistRepository>()),
+  );
+  getIt.registerLazySingleton<ClearWishlistUseCase>(
+    () => ClearWishlistUseCase(getIt<WishlistRepository>()),
+  );
+
+  // ── Features: Cart & Wishlist Presentation (BLoCs) ───────────────────────
+  getIt.registerLazySingleton<CartBloc>(
+    () => CartBloc(
+      getCartUseCase: getIt<GetCartUseCase>(),
+      addToCartUseCase: getIt<AddToCartUseCase>(),
+      updateCartItemUseCase: getIt<UpdateCartItemUseCase>(),
+      removeCartItemUseCase: getIt<RemoveCartItemUseCase>(),
+      clearCartUseCase: getIt<ClearCartUseCase>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<WishlistBloc>(
+    () => WishlistBloc(
+      getWishlistUseCase: getIt<GetWishlistUseCase>(),
+      addToWishlistUseCase: getIt<AddToWishlistUseCase>(),
+      removeFromWishlistUseCase: getIt<RemoveFromWishlistUseCase>(),
+      clearWishlistUseCase: getIt<ClearWishlistUseCase>(),
     ),
   );
 }

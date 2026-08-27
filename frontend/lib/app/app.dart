@@ -5,14 +5,19 @@ import '../core/di/injection_container.dart';
 import '../core/router/app_router.dart';
 import '../core/theme/app_theme.dart';
 import '../features/auth/presentation/bloc/auth_bloc.dart';
+import '../features/auth/presentation/bloc/auth_state.dart';
+import '../features/cart/presentation/bloc/cart_bloc.dart';
+import '../features/cart/presentation/bloc/cart_event.dart';
 import '../features/products/presentation/bloc/category/category_bloc.dart';
 import '../features/products/presentation/bloc/product/product_bloc.dart';
 import '../features/products/presentation/bloc/seller/seller_product_bloc.dart';
+import '../features/wishlist/presentation/bloc/wishlist_bloc.dart';
+import '../features/wishlist/presentation/bloc/wishlist_event.dart';
 
 /// Root application widget.
 ///
 /// Wires together:
-/// - MultiBlocProvider (AuthBloc, CategoryBloc, ProductBloc, SellerProductBloc)
+/// - MultiBlocProvider (AuthBloc, CategoryBloc, ProductBloc, SellerProductBloc, CartBloc, WishlistBloc)
 /// - go_router (declarative routing)
 /// - Material 3 light / dark theme
 class MarketoApp extends StatelessWidget {
@@ -26,18 +31,31 @@ class MarketoApp extends StatelessWidget {
         BlocProvider<CategoryBloc>(create: (_) => getIt<CategoryBloc>()),
         BlocProvider<ProductBloc>(create: (_) => getIt<ProductBloc>()),
         BlocProvider<SellerProductBloc>(create: (_) => getIt<SellerProductBloc>()),
+        BlocProvider<CartBloc>(create: (_) => getIt<CartBloc>()),
+        BlocProvider<WishlistBloc>(create: (_) => getIt<WishlistBloc>()),
       ],
-      child: MaterialApp.router(
-        title: 'Marketo',
-        debugShowCheckedModeBanner: false,
+      child: BlocListener<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is Authenticated) {
+            context.read<CartBloc>().add(const CartRequested());
+            context.read<WishlistBloc>().add(const WishlistRequested());
+          } else if (state is Unauthenticated) {
+            context.read<CartBloc>().add(const CartReset());
+            context.read<WishlistBloc>().add(const WishlistReset());
+          }
+        },
+        child: MaterialApp.router(
+          title: 'Marketo',
+          debugShowCheckedModeBanner: false,
 
-        // ── Routing ────────────────────────────────────────────────────────
-        routerConfig: appRouter,
+          // ── Routing ────────────────────────────────────────────────────────
+          routerConfig: appRouter,
 
-        // ── Theming ────────────────────────────────────────────────────────
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        themeMode: ThemeMode.system,
+          // ── Theming ────────────────────────────────────────────────────────
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: ThemeMode.system,
+        ),
       ),
     );
   }

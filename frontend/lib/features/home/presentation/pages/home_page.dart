@@ -20,6 +20,8 @@ import '../../../products/presentation/bloc/category/category_state.dart';
 import '../../../products/presentation/bloc/product/product_bloc.dart';
 import '../../../products/presentation/bloc/product/product_event.dart';
 import '../../../products/presentation/bloc/product/product_state.dart';
+import '../../../cart/presentation/bloc/cart_bloc.dart';
+import '../../../cart/presentation/bloc/cart_state.dart';
 import '../../../products/presentation/widgets/category_chip_list.dart';
 import '../../../products/presentation/widgets/product_card.dart';
 import '../../../products/presentation/widgets/product_filter_sheet.dart';
@@ -454,6 +456,56 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
+      bottomNavigationBar: BlocBuilder<CartBloc, CartState>(
+        builder: (context, cartState) {
+          final cartCount = cartState is CartLoaded ? cartState.itemCount : 0;
+
+          return NavigationBar(
+            selectedIndex: 0,
+            onDestinationSelected: (index) {
+              if (index == 1) {
+                context.push('/wishlist');
+              } else if (index == 2) {
+                context.push('/cart');
+              } else if (index == 3) {
+                final authState = context.read<AuthBloc>().state;
+                final user = authState is Authenticated ? authState.user : null;
+                _showAccountSheet(context, user);
+              }
+            },
+            destinations: [
+              const NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home_rounded),
+                label: 'Home',
+              ),
+              const NavigationDestination(
+                icon: Icon(Icons.favorite_outline_rounded),
+                selectedIcon: Icon(Icons.favorite_rounded),
+                label: 'Wishlist',
+              ),
+              NavigationDestination(
+                icon: Badge(
+                  isLabelVisible: cartCount > 0,
+                  label: Text('$cartCount'),
+                  child: const Icon(Icons.shopping_bag_outlined),
+                ),
+                selectedIcon: Badge(
+                  isLabelVisible: cartCount > 0,
+                  label: Text('$cartCount'),
+                  child: const Icon(Icons.shopping_bag_rounded),
+                ),
+                label: 'Cart',
+              ),
+              const NavigationDestination(
+                icon: Icon(Icons.person_outline_rounded),
+                selectedIcon: Icon(Icons.person_rounded),
+                label: 'Account',
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -494,27 +546,86 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-            BlocBuilder<AuthBloc, AuthState>(
-              builder: (context, state) {
-                final user = state is Authenticated ? state.user : null;
+            Row(
+              children: [
+                // ── Wishlist Action ─────────────────────────────────────────
+                IconButton(
+                  icon: const Icon(Icons.favorite_border_rounded),
+                  tooltip: 'Wishlist',
+                  onPressed: () => context.push('/wishlist'),
+                ),
 
-                return GestureDetector(
-                  onTap: () => _showAccountSheet(context, user),
-                  child: CircleAvatar(
-                    radius: 18,
-                    backgroundColor: theme.colorScheme.primary.withValues(
-                      alpha: 0.12,
-                    ),
-                    child: Text(
-                      user != null ? user.fullName[0].toUpperCase() : '?',
-                      style: AppTextStyles.labelLarge.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
+                // ── Cart Action with Live Badge ────────────────────────────
+                BlocBuilder<CartBloc, CartState>(
+                  builder: (context, cartState) {
+                    final count = cartState is CartLoaded
+                        ? cartState.itemCount
+                        : 0;
+
+                    return Stack(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.shopping_bag_outlined),
+                          tooltip: 'Shopping Cart',
+                          onPressed: () => context.push('/cart'),
+                        ),
+                        if (count > 0)
+                          Positioned(
+                            right: 6,
+                            top: 6,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: AppColorsLight.error,
+                                shape: BoxShape.circle,
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 16,
+                                minHeight: 16,
+                              ),
+                              child: Text(
+                                count > 99 ? '99+' : '$count',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+
+                const SizedBox(width: 4),
+
+                // ── User Avatar / Sheet ────────────────────────────────────
+                BlocBuilder<AuthBloc, AuthState>(
+                  builder: (context, state) {
+                    final user = state is Authenticated ? state.user : null;
+
+                    return GestureDetector(
+                      onTap: () => _showAccountSheet(context, user),
+                      child: CircleAvatar(
+                        radius: 18,
+                        backgroundColor: theme.colorScheme.primary.withValues(
+                          alpha: 0.12,
+                        ),
+                        child: Text(
+                          user != null ? user.fullName[0].toUpperCase() : '?',
+                          style: AppTextStyles.labelLarge.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              },
+                    );
+                  },
+                ),
+              ],
             ),
           ],
         ),

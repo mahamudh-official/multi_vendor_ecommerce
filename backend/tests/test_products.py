@@ -29,11 +29,12 @@ async def test_seller_creates_product(client: AsyncClient, sample_category: str)
     """9. Authenticated seller creates product listing."""
     _, seller_token = await create_test_user(UserRole.seller)
 
+    unique_name = f"Wireless Noise Cancelling Headphones {uuid.uuid4().hex[:6]}"
     res = await client.post(
         "/api/v1/products",
         headers={"Authorization": f"Bearer {seller_token}"},
         json={
-            "name": "Wireless Noise Cancelling Headphones",
+            "name": unique_name,
             "description": "Premium sound quality",
             "price": "199.99",
             "compare_at_price": "249.99",
@@ -47,8 +48,8 @@ async def test_seller_creates_product(client: AsyncClient, sample_category: str)
     )
     assert res.status_code == 201
     data = res.json()
-    assert data["name"] == "Wireless Noise Cancelling Headphones"
-    assert data["slug"] == "wireless-noise-cancelling-headphones"
+    assert data["name"] == unique_name
+    assert "wireless-noise-cancelling-headphones" in data["slug"]
     assert float(data["price"]) == 199.99
     assert float(data["compare_at_price"]) == 249.99
     assert data["stock_quantity"] == 50

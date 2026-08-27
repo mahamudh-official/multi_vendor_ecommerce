@@ -12,6 +12,7 @@ from app.common.exceptions.handlers import register_exception_handlers
 from app.core.config import get_settings
 from app.core.database import AsyncSessionLocal, engine
 from app.modules.auth.router import router as auth_router
+from app.modules.cart.router import cart_router, wishlist_router
 from app.modules.products.router import router as products_router
 
 logger = logging.getLogger(__name__)
@@ -76,6 +77,8 @@ register_exception_handlers(app)
 # ── Routers ────────────────────────────────────────────────────────────────
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(products_router, prefix="/api/v1")
+app.include_router(cart_router, prefix="/api/v1")
+app.include_router(wishlist_router, prefix="/api/v1")
 
 
 # ── Health Check ───────────────────────────────────────────────────────────

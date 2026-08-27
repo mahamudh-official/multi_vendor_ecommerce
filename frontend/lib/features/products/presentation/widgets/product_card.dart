@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -7,9 +8,16 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/product_image_placeholder.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../cart/presentation/bloc/cart_bloc.dart';
+import '../../../cart/presentation/bloc/cart_event.dart';
+import '../../../wishlist/presentation/bloc/wishlist_bloc.dart';
+import '../../../wishlist/presentation/bloc/wishlist_event.dart';
+import '../../../wishlist/presentation/bloc/wishlist_state.dart';
 import '../../domain/entities/product.dart';
 
-/// Reusable premium product card.
+/// Premium product card widget displaying image, title, price, badges, wishlist toggle, and quick cart action.
 class ProductCard extends StatelessWidget {
   const ProductCard({super.key, required this.product, this.onTap});
 
@@ -20,6 +28,7 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final inStock = product.isActive && product.stockQuantity > 0;
 
     return Container(
       decoration: BoxDecoration(
@@ -38,7 +47,7 @@ class ProductCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Image with Badges ─────────────────────────────────────────
+              // ── Image with Badges & Wishlist Button ──────────────────────
               Expanded(
                 child: Stack(
                   fit: StackFit.expand,
@@ -121,48 +130,79 @@ class ProductCard extends StatelessWidget {
                         ),
                       ),
 
-                    // Wishlist placeholder icon
+                    // Wishlist Toggle Icon
                     Positioned(
                       top: 6,
                       right: 6,
-                      child: Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface.withValues(
-                            alpha: 0.85,
-                          ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.favorite_border_rounded,
-                          size: 16,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+                      child: BlocBuilder<WishlistBloc, WishlistState>(
+                        builder: (context, wishlistState) {
+                          final isFavorite =
+                              wishlistState is WishlistLoaded &&
+                              wishlistState.containsProduct(product.id);
+
+                          return GestureDetector(
+                            onTap: () {
+                              final authState = context.read<AuthBloc>().state;
+                              if (authState is! Authenticated) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Please sign in to save items to wishlist.',
+                                    ),
+                                    duration: Duration(seconds: 2),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                                return;
+                              }
+                              context.read<WishlistBloc>().add(
+                                ToggleWishlist(product.id),
+                              );
+                            },
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surface.withValues(
+                                  alpha: 0.9,
+                                ),
+                                shape: BoxShape.circle,
+                                boxShadow: AppShadows.sm,
+                              ),
+                              child: Icon(
+                                isFavorite
+                                    ? Icons.favorite_rounded
+                                    : Icons.favorite_border_rounded,
+                                size: 18,
+                                color: isFavorite
+                                    ? AppColorsLight.error
+                                    : theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ],
                 ),
               ),
 
-              // ── Product Info ──────────────────────────────────────────────
+              // ── Details Section ──────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Category & Seller
+                    // Category chip / text
                     Text(
                       product.category.name.toUpperCase(),
-                      style: AppTextStyles.badge.copyWith(
+                      style: AppTextStyles.bodySmall.copyWith(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
+                        letterSpacing: 0.8,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
 
                     // Title
                     Text(
@@ -177,28 +217,79 @@ class ProductCard extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.sm),
 
-                    // Price & Compare-at price
+                    // Price & Quick Add-to-cart button
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '\$${product.price.toStringAsFixed(2)}',
-                          style: AppTextStyles.titleMedium.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '\$${product.price.toStringAsFixed(2)}',
+                                style: AppTextStyles.titleMedium.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              if (product.compareAtPrice != null)
+                                Text(
+                                  '\$${product.compareAtPrice!.toStringAsFixed(2)}',
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    decoration: TextDecoration.lineThrough,
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
-                        if (product.compareAtPrice != null) ...[
-                          const SizedBox(width: 6),
-                          Text(
-                            '\$${product.compareAtPrice!.toStringAsFixed(2)}',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              decoration: TextDecoration.lineThrough,
+
+                        // Quick Add to Cart button
+                        InkWell(
+                          onTap: inStock
+                              ? () {
+                                  final authState = context
+                                      .read<AuthBloc>()
+                                      .state;
+                                  if (authState is! Authenticated) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Please sign in to add items to cart.',
+                                        ),
+                                        duration: Duration(seconds: 2),
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  context.read<CartBloc>().add(
+                                    AddToCart(
+                                      productId: product.id,
+                                      quantity: 1,
+                                    ),
+                                  );
+                                }
+                              : null,
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: inStock
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(AppRadius.sm),
+                            ),
+                            child: Icon(
+                              Icons.add_shopping_cart_rounded,
+                              size: 18,
+                              color: inStock
+                                  ? theme.colorScheme.onPrimary
+                                  : theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
-                        ],
+                        ),
                       ],
                     ),
                   ],

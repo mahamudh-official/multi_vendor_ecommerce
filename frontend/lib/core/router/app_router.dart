@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/cart/presentation/pages/cart_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/products/domain/entities/product.dart';
 import '../../features/products/presentation/pages/create_product_page.dart';
@@ -10,6 +11,7 @@ import '../../features/products/presentation/pages/edit_product_page.dart';
 import '../../features/products/presentation/pages/product_details_page.dart';
 import '../../features/products/presentation/pages/seller_products_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
+import '../../features/wishlist/presentation/pages/wishlist_page.dart';
 
 /// Application route constants.
 abstract final class AppRoutes {
@@ -17,9 +19,11 @@ abstract final class AppRoutes {
 
   static const String splash = '/';
   static const String welcome = '/welcome';
-  static const String login = '/login';
-  static const String register = '/register';
-  static const String home = '/home';
+  static const String login = '/auth/login';
+  static const String register = '/auth/register';
+  static const String home = '/';
+  static const String cart = '/cart';
+  static const String wishlist = '/wishlist';
   static const String productDetails = '/products/:id';
   static const String sellerProducts = '/seller/products';
   static const String sellerProductCreate = '/seller/products/create';
@@ -77,12 +81,34 @@ final GoRouter appRouter = GoRouter(
 
     // ── Home ─────────────────────────────────────────────────────────────
     GoRoute(
-      path: AppRoutes.home,
+      path: '/home',
       name: 'home',
       pageBuilder: (context, state) => CustomTransitionPage(
         key: state.pageKey,
         child: const HomePage(),
         transitionsBuilder: _fadeTransition,
+      ),
+    ),
+
+    // ── Shopping Cart ────────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.cart,
+      name: 'cart',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const CartPage(),
+        transitionsBuilder: _slideRightTransition,
+      ),
+    ),
+
+    // ── Wishlist ─────────────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.wishlist,
+      name: 'wishlist',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const WishlistPage(),
+        transitionsBuilder: _slideRightTransition,
       ),
     ),
 
