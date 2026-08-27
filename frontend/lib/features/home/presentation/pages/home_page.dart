@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -7,6 +9,10 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/product_image_placeholder.dart';
+import '../../../auth/domain/entities/auth_user.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_event.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../domain/entities/mock_product.dart';
 
 /// Premium marketplace home / welcome preview screen.
@@ -250,18 +256,177 @@ class _SliverAppBar extends StatelessWidget {
           color: theme.colorScheme.onSurface,
         ),
         Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: CircleAvatar(
-            radius: 18,
-            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-            child: Icon(
-              Icons.person_outline_rounded,
-              size: 20,
-              color: theme.colorScheme.primary,
-            ),
+          padding: const EdgeInsets.only(right: 12),
+          child: BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, state) {
+              final user = state is Authenticated ? state.user : null;
+
+              return GestureDetector(
+                onTap: () => _showAccountSheet(context, user),
+                child: CircleAvatar(
+                  radius: 18,
+                  backgroundColor: theme.colorScheme.primary.withValues(
+                    alpha: 0.12,
+                  ),
+                  child: Text(
+                    user != null ? user.fullName[0].toUpperCase() : '?',
+                    style: AppTextStyles.labelLarge.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ],
+    );
+  }
+
+  void _showAccountSheet(BuildContext context, AuthUser? user) {
+    final theme = Theme.of(context);
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
+      builder: (bottomSheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl2),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.outline,
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                if (user != null) ...[
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 26,
+                        backgroundColor: theme.colorScheme.primary,
+                        child: Text(
+                          user.fullName[0].toUpperCase(),
+                          style: AppTextStyles.titleLarge.copyWith(
+                            color: theme.colorScheme.onPrimary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              user.fullName,
+                              style: AppTextStyles.titleMedium.copyWith(
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            Text(
+                              user.email,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.12,
+                          ),
+                          borderRadius: BorderRadius.circular(AppRadius.full),
+                        ),
+                        child: Text(
+                          user.role.toUpperCase(),
+                          style: AppTextStyles.badge.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xl2),
+                  const Divider(),
+                  const SizedBox(height: AppSpacing.md),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.logout_rounded,
+                      color: Colors.red,
+                    ),
+                    title: Text(
+                      'Sign Out',
+                      style: AppTextStyles.labelLarge.copyWith(
+                        color: Colors.red,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(bottomSheetContext);
+                      context.read<AuthBloc>().add(const LogoutRequested());
+                    },
+                  ),
+                ] else ...[
+                  Text(
+                    'Welcome to Marketo',
+                    style: AppTextStyles.titleMedium.copyWith(
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Sign in to manage orders, wishlist, and your seller store.',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xl2),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.pop(bottomSheetContext);
+                            context.go('/register');
+                          },
+                          child: const Text('Register'),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: () {
+                            Navigator.pop(bottomSheetContext);
+                            context.go('/login');
+                          },
+                          child: const Text('Sign In'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

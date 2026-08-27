@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -6,11 +7,14 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_event.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
 
 /// Animated splash screen.
 ///
-/// Displays the brand logo with a fade+scale animation,
-/// then navigates to [AppRoutes.welcome] after a short delay.
+/// Checks stored authentication session and directs to
+/// [AppRoutes.home] if authenticated, or [AppRoutes.welcome] otherwise.
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -49,9 +53,16 @@ class _SplashPageState extends State<SplashPage>
 
     _controller.forward();
 
-    // Navigate after animation + brief hold
-    Future.delayed(const Duration(milliseconds: 1800), () {
-      if (mounted) {
+    // Check stored session on launch
+    context.read<AuthBloc>().add(const AuthCheckRequested());
+
+    // Navigate after animation + verification check
+    Future.delayed(const Duration(milliseconds: 1600), () {
+      if (!mounted) return;
+      final authState = context.read<AuthBloc>().state;
+      if (authState is Authenticated) {
+        context.go(AppRoutes.home);
+      } else {
         context.go(AppRoutes.welcome);
       }
     });

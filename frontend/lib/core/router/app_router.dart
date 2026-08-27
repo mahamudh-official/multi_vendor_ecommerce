@@ -1,38 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 
-/// Application route names — use these constants instead of raw strings.
+/// Application route constants.
 abstract final class AppRoutes {
   AppRoutes._();
 
   static const String splash = '/';
   static const String welcome = '/welcome';
-
-  // ── Step 2+ ─────────────────────────────────────────────────────────────
-  // static const String login = '/auth/login';
-  // static const String register = '/auth/register';
-  // static const String home = '/home';
-  // static const String products = '/products';
-  // static const String productDetail = '/products/:id';
-  // static const String cart = '/cart';
-  // static const String orders = '/orders';
-  // static const String seller = '/seller';
-  // static const String admin = '/admin';
+  static const String login = '/login';
+  static const String register = '/register';
+  static const String home = '/home';
 }
 
 /// Application router configuration using go_router.
-///
-/// Structure:
-///   / (splash) → /welcome (home preview)
-///
-/// Future routes will be added here without touching existing routes.
 final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.splash,
-  debugLogDiagnostics: true,
-
+  debugLogDiagnostics: false,
   routes: [
     // ── Splash ──────────────────────────────────────────────────────────
     GoRoute(
@@ -45,7 +33,7 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
 
-    // ── Welcome / Home Preview ───────────────────────────────────────────
+    // ── Welcome / Guest Preview ──────────────────────────────────────────
     GoRoute(
       path: AppRoutes.welcome,
       name: 'welcome',
@@ -56,7 +44,38 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
 
-    // ── Step 2+ routes will be added below ───────────────────────────────
+    // ── Login ────────────────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.login,
+      name: 'login',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const LoginPage(),
+        transitionsBuilder: _slideRightTransition,
+      ),
+    ),
+
+    // ── Register ─────────────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.register,
+      name: 'register',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const RegisterPage(),
+        transitionsBuilder: _slideRightTransition,
+      ),
+    ),
+
+    // ── Authenticated Home ───────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.home,
+      name: 'home',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const HomePage(),
+        transitionsBuilder: _fadeTransition,
+      ),
+    ),
   ],
 
   // Global error page
@@ -91,6 +110,21 @@ Widget _slideUpTransition(
   );
 }
 
+Widget _slideRightTransition(
+  BuildContext context,
+  Animation<double> animation,
+  Animation<double> secondaryAnimation,
+  Widget child,
+) {
+  return SlideTransition(
+    position: Tween<Offset>(
+      begin: const Offset(0.08, 0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+    child: FadeTransition(opacity: animation, child: child),
+  );
+}
+
 // ── Error Page ───────────────────────────────────────────────────────────────
 
 class _ErrorPage extends StatelessWidget {
@@ -107,10 +141,7 @@ class _ErrorPage extends StatelessWidget {
           children: [
             const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
-            Text(
-              'Page Not Found',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
+            Text('Page Not Found', style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 8),
             Text(error, textAlign: TextAlign.center),
           ],

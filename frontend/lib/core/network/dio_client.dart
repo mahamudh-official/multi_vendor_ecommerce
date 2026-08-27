@@ -35,6 +35,11 @@ class DioClient {
   void clearAuthToken() {
     _dio.options.headers.remove('Authorization');
   }
+
+  /// Attach additional interceptors (e.g. AuthInterceptor).
+  void addInterceptor(Interceptor interceptor) {
+    _dio.interceptors.add(interceptor);
+  }
 }
 
 // ── Logging Interceptor ────────────────────────────────────────────────────

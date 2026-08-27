@@ -1,7 +1,7 @@
 """
 Security utilities: JWT token handling and password hashing.
 
-Password hashing: pwdlib with argon2 (replaces passlib).
+Password hashing: pwdlib with Argon2.
 JWT: python-jose.
 """
 from datetime import datetime, timedelta, timezone
@@ -16,7 +16,6 @@ from app.core.config import get_settings
 settings = get_settings()
 
 # ── Password hashing ───────────────────────────────────────────────────────
-# pwdlib with Argon2 — modern, memory-hard, recommended algorithm
 _password_hash = PasswordHash([Argon2Hasher()])
 
 
@@ -34,16 +33,28 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def create_access_token(
     subject: str | Any,
+    role: str | None = None,
     expires_delta: timedelta | None = None,
-) -> str:
-    """Create a signed JWT access token."""
-    expire = datetime.now(timezone.utc) + (
+) -> tuple[str, int]:
+    """
+    Create a signed JWT access token.
+    Returns (token_str, expires_in_seconds).
+    """
+    delta = (
         expires_delta
         if expires_delta is not None
         else timedelta(minutes=settings.access_token_expire_minutes)
     )
-    payload = {"sub": str(subject), "exp": expire, "type": "access"}
-    return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+    expire = datetime.now(timezone.utc) + delta
+    payload: dict[str, Any] = {
+        "sub": str(subject),
+        "exp": expire,
+        "type": "access",
+    }
+    if role:
+        payload["role"] = str(role)
+    token = jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+    return token, int(delta.total_seconds())
 
 
 def create_refresh_token(
@@ -51,27 +62,27 @@ def create_refresh_token(
     expires_delta: timedelta | None = None,
 ) -> str:
     """Create a signed JWT refresh token."""
-    expire = datetime.now(timezone.utc) + (
+    delta = (
         expires_delta
         if expires_delta is not None
         else timedelta(days=settings.refresh_token_expire_days)
     )
-    payload = {"sub": str(subject), "exp": expire, "type": "refresh"}
+    expire = datetime.now(timezone.utc) + delta
+    payload: dict[str, Any] = {
+        "sub": str(subject),
+        "exp": expire,
+        "type": "refresh",
+    }
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 
 def decode_token(token: str) -> dict[str, Any]:
     """
     Decode and verify a JWT token.
-    Raises JWTError if token is invalid or expired.
+    Raises JWTError if token is invalid, expired, or malformed.
     """
-    try:
-        payload = jwt.decode(
-            token,
-            settings.secret_key,
-            algorithms=[settings.algorithm],
-        )
-        return payload
-    except JWTError:
-        raise
-
+    return jwt.decode(
+        token,
+        settings.secret_key,
+        algorithms=[settings.algorithm],
+    )
