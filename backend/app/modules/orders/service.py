@@ -3,13 +3,15 @@ import string
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.auth.models import User, UserRole
 from app.modules.cart.repository import CartRepository
+from app.modules.notifications.models import NotificationType
+from app.modules.notifications.service import NotificationService
 from app.modules.orders.models import FulfillmentStatus, Order, OrderItem, OrderStatus, PaymentStatus
 from app.modules.orders.repository import OrderRepository
 from app.modules.orders.schemas import (
@@ -20,6 +22,7 @@ from app.modules.orders.schemas import (
     OrderListResponse,
     OrderRead,
 )
+from app.modules.products.models import Product
 from app.modules.products.repository import ProductRepository
 
 
@@ -39,11 +42,13 @@ class OrderService:
         cart_repo: CartRepository,
         product_repo: ProductRepository,
         session: AsyncSession,
+        notification_service: Optional[NotificationService] = None,
     ) -> None:
         self.order_repo = order_repo
         self.cart_repo = cart_repo
         self.product_repo = product_repo
         self.session = session
+        self.notification_service = notification_service
 
     async def checkout(
         self,
@@ -80,6 +85,7 @@ class OrderService:
 
         # ── 3. Atomically Validate & Decrement Stock, Collect Snapshots ──────
         order_items_to_create: List[OrderItem] = []
+        purchased_products: List[Tuple[Product, int]] = []
         subtotal = Decimal("0.00")
         shipping_addr = data.shipping_address
 
@@ -102,6 +108,8 @@ class OrderService:
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail=f"Not enough stock available for '{product.name}'.",
                     )
+
+                purchased_products.append((product, cart_item.quantity))
 
                 # Authoritative server-side price calculation
                 unit_price = Decimal(str(product.price))
@@ -164,7 +172,59 @@ class OrderService:
             # ── 7. Clear User Cart ──────────────────────────────────────────
             await self.cart_repo.clear_cart(cart.id)
 
-            # ── 8. Commit All Changes ───────────────────────────────────────
+            # ── 8. Dispatch Notifications ───────────────────────────────────
+            if self.notification_service:
+                # Customer notification
+                await self.notification_service.send_notification(
+                    user_id=user.id,
+                    type=NotificationType.ORDER_CREATED,
+                    title="Order Placed Successfully",
+                    message=f"Your order #{order.order_number} for ${order.total_amount:.2f} has been placed.",
+                    data={
+                        "order_id": str(order.id),
+                        "order_number": order.order_number,
+                        "total_amount": str(order.total_amount),
+                    },
+                )
+
+                # Group order items by seller for isolated seller notifications
+                seller_items_map = {}
+                for item in order.items:
+                    seller_items_map.setdefault(item.seller_id, []).append(item)
+
+                for seller_id, s_items in seller_items_map.items():
+                    s_count = sum(i.quantity for i in s_items)
+                    s_subtotal = sum(i.line_total for i in s_items)
+                    await self.notification_service.send_notification(
+                        user_id=seller_id,
+                        type=NotificationType.SELLER_ORDER_CREATED,
+                        title="New Order Received",
+                        message=f"You received a new order #{order.order_number} containing {s_count} item(s) (${s_subtotal:.2f}).",
+                        data={
+                            "order_id": str(order.id),
+                            "order_number": order.order_number,
+                            "seller_item_count": s_count,
+                            "seller_subtotal": str(s_subtotal),
+                        },
+                    )
+
+                # Check low stock warnings for products
+                for product, qty in purchased_products:
+                    remaining = product.stock_quantity - qty
+                    if remaining <= 5:
+                        await self.notification_service.send_notification(
+                            user_id=product.seller_id,
+                            type=NotificationType.LOW_STOCK,
+                            title="Low Stock Warning",
+                            message=f"Product '{product.name}' is low in stock ({remaining} remaining).",
+                            data={
+                                "product_id": str(product.id),
+                                "product_name": product.name,
+                                "stock_quantity": remaining,
+                            },
+                        )
+
+            # ── 9. Commit All Changes ───────────────────────────────────────
             await self.session.commit()
             await self.session.refresh(order)
 
@@ -262,6 +322,19 @@ class OrderService:
                 item.fulfillment_status = FulfillmentStatus.CANCELLED
 
             order.status = OrderStatus.CANCELLED
+
+            if self.notification_service:
+                await self.notification_service.send_notification(
+                    user_id=user.id,
+                    type=NotificationType.ORDER_CANCELLED,
+                    title="Order Cancelled",
+                    message=f"Order #{order.order_number} has been cancelled successfully.",
+                    data={
+                        "order_id": str(order.id),
+                        "order_number": order.order_number,
+                    },
+                )
+
             await self.session.commit()
             await self.session.refresh(order)
 

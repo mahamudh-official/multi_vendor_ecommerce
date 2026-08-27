@@ -8,6 +8,11 @@ import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/orders/presentation/pages/checkout_page.dart';
 import '../../features/orders/presentation/pages/order_details_page.dart';
 import '../../features/orders/presentation/pages/orders_page.dart';
+import '../../features/notifications/presentation/pages/notifications_page.dart';
+import '../../features/payment/domain/entities/payment.dart';
+import '../../features/payment/presentation/pages/payment_failure_page.dart';
+import '../../features/payment/presentation/pages/payment_page.dart';
+import '../../features/payment/presentation/pages/payment_success_page.dart';
 import '../../features/products/presentation/pages/product_details_page.dart';
 import '../../features/seller/presentation/pages/create_product_page.dart';
 import '../../features/seller/presentation/pages/edit_product_page.dart';
@@ -33,6 +38,14 @@ abstract final class AppRoutes {
   static const String orders = '/orders';
   static const String orderDetails = '/orders/:id';
   static const String productDetails = '/products/:id';
+
+  // Notifications Route
+  static const String notifications = '/notifications';
+
+  // Payment Routes
+  static const String payment = '/payment/:orderId';
+  static const String paymentSuccess = '/payment/success';
+  static const String paymentFailure = '/payment/failure';
 
   // Seller Portal Routes
   static const String seller = '/seller';
@@ -245,6 +258,65 @@ final GoRouter appRouter = GoRouter(
       },
     ),
 
+    // ── Notifications ────────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.notifications,
+      name: 'notifications',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const NotificationsPage(),
+        transitionsBuilder: _slideRightTransition,
+      ),
+    ),
+
+    // ── Payment ──────────────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.payment,
+      name: 'payment',
+      pageBuilder: (context, state) {
+        final orderId = state.pathParameters['orderId'] ?? '';
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: PaymentPage(orderId: orderId),
+          transitionsBuilder: _slideRightTransition,
+        );
+      },
+    ),
+
+    // ── Payment Success ──────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.paymentSuccess,
+      name: 'payment-success',
+      pageBuilder: (context, state) {
+        final result = state.extra as PaymentProcessResult?;
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: PaymentSuccessPage(result: result),
+          transitionsBuilder: _fadeTransition,
+        );
+      },
+    ),
+
+    // ── Payment Failure ──────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.paymentFailure,
+      name: 'payment-failure',
+      pageBuilder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: PaymentFailurePage(
+            message:
+                extra?['message'] as String? ??
+                'Payment could not be processed.',
+            paymentId: extra?['paymentId'] as String?,
+            orderId: extra?['orderId'] as String?,
+          ),
+          transitionsBuilder: _fadeTransition,
+        );
+      },
+    ),
+
     // ── Seller Order Details ─────────────────────────────────────────────
     GoRoute(
       path: AppRoutes.sellerOrderDetails,
@@ -323,7 +395,10 @@ class _ErrorPage extends StatelessWidget {
           children: [
             const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
-            Text('Page Not Found', style: Theme.of(context).textTheme.headlineSmall),
+            Text(
+              'Page Not Found',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
             const SizedBox(height: 8),
             Text(error, textAlign: TextAlign.center),
           ],

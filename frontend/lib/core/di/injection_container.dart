@@ -63,6 +63,16 @@ import '../../features/seller/domain/usecases/seller_order_usecases.dart';
 import '../../features/seller/presentation/bloc/seller_dashboard/seller_dashboard_bloc.dart';
 import '../../features/seller/presentation/bloc/seller_products/seller_products_bloc.dart';
 import '../../features/seller/presentation/bloc/seller_orders/seller_orders_bloc.dart';
+import '../../features/payment/data/datasources/payment_remote_datasource.dart';
+import '../../features/payment/data/repositories/payment_repository_impl.dart';
+import '../../features/payment/domain/repositories/payment_repository.dart';
+import '../../features/payment/domain/usecases/payment_usecases.dart';
+import '../../features/payment/presentation/bloc/payment_bloc.dart';
+import '../../features/notifications/data/datasources/notification_remote_datasource.dart';
+import '../../features/notifications/data/repositories/notification_repository_impl.dart';
+import '../../features/notifications/domain/repositories/notification_repository.dart';
+import '../../features/notifications/domain/usecases/notification_usecases.dart';
+import '../../features/notifications/presentation/bloc/notification_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -345,6 +355,66 @@ Future<void> configureDependencies() async {
       getOrdersUseCase: getIt<GetSellerOrdersUseCase>(),
       getOrderDetailsUseCase: getIt<GetSellerOrderDetailsUseCase>(),
       updateOrderStatusUseCase: getIt<UpdateSellerOrderStatusUseCase>(),
+    ),
+  );
+
+  // ── Features: Payment ─────────────────────────────────────────────────────
+  getIt.registerLazySingleton<PaymentRemoteDataSource>(
+    () => PaymentRemoteDataSourceImpl(dioClient: getIt<DioClient>()),
+  );
+  getIt.registerLazySingleton<PaymentRepository>(
+    () => PaymentRepositoryImpl(
+      remoteDataSource: getIt<PaymentRemoteDataSource>(),
+    ),
+  );
+  getIt.registerLazySingleton<CreatePaymentUseCase>(
+    () => CreatePaymentUseCase(getIt<PaymentRepository>()),
+  );
+  getIt.registerLazySingleton<ProcessPaymentUseCase>(
+    () => ProcessPaymentUseCase(getIt<PaymentRepository>()),
+  );
+  getIt.registerLazySingleton<GetPaymentUseCase>(
+    () => GetPaymentUseCase(getIt<PaymentRepository>()),
+  );
+  getIt.registerLazySingleton<GetOrderPaymentUseCase>(
+    () => GetOrderPaymentUseCase(getIt<PaymentRepository>()),
+  );
+  getIt.registerFactory<PaymentBloc>(
+    () => PaymentBloc(
+      createPaymentUseCase: getIt<CreatePaymentUseCase>(),
+      processPaymentUseCase: getIt<ProcessPaymentUseCase>(),
+      getPaymentUseCase: getIt<GetPaymentUseCase>(),
+      getOrderPaymentUseCase: getIt<GetOrderPaymentUseCase>(),
+    ),
+  );
+
+  // ── Features: Notifications ───────────────────────────────────────────────
+  getIt.registerLazySingleton<NotificationRemoteDataSource>(
+    () => NotificationRemoteDataSourceImpl(dioClient: getIt<DioClient>()),
+  );
+  getIt.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(
+      remoteDataSource: getIt<NotificationRemoteDataSource>(),
+    ),
+  );
+  getIt.registerLazySingleton<GetNotificationsUseCase>(
+    () => GetNotificationsUseCase(getIt<NotificationRepository>()),
+  );
+  getIt.registerLazySingleton<GetUnreadNotificationCountUseCase>(
+    () => GetUnreadNotificationCountUseCase(getIt<NotificationRepository>()),
+  );
+  getIt.registerLazySingleton<MarkNotificationReadUseCase>(
+    () => MarkNotificationReadUseCase(getIt<NotificationRepository>()),
+  );
+  getIt.registerLazySingleton<MarkAllNotificationsReadUseCase>(
+    () => MarkAllNotificationsReadUseCase(getIt<NotificationRepository>()),
+  );
+  getIt.registerFactory<NotificationBloc>(
+    () => NotificationBloc(
+      getNotificationsUseCase: getIt<GetNotificationsUseCase>(),
+      getUnreadCountUseCase: getIt<GetUnreadNotificationCountUseCase>(),
+      markReadUseCase: getIt<MarkNotificationReadUseCase>(),
+      markAllReadUseCase: getIt<MarkAllNotificationsReadUseCase>(),
     ),
   );
 }

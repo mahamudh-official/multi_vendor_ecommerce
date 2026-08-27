@@ -22,6 +22,7 @@ import '../../../products/presentation/bloc/product/product_event.dart';
 import '../../../products/presentation/bloc/product/product_state.dart';
 import '../../../cart/presentation/bloc/cart_bloc.dart';
 import '../../../cart/presentation/bloc/cart_state.dart';
+import '../../../notifications/presentation/widgets/notification_badge_icon.dart';
 import '../../../products/presentation/widgets/category_chip_list.dart';
 import '../../../products/presentation/widgets/product_card.dart';
 import '../../../products/presentation/widgets/product_filter_sheet.dart';
@@ -548,6 +549,9 @@ class _HomePageState extends State<HomePage> {
             ),
             Row(
               children: [
+                // ── Notifications ───────────────────────────────────────────
+                const NotificationBadgeIcon(),
+
                 // ── Wishlist Action ─────────────────────────────────────────
                 IconButton(
                   icon: const Icon(Icons.favorite_border_rounded),

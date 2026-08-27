@@ -117,7 +117,7 @@ class _SellerOrderDetailsPageState extends State<SellerOrderDetailsPage> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: order.status.color.withOpacity(0.12),
+                                color: order.status.color.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -250,7 +250,7 @@ class _SellerOrderDetailsPageState extends State<SellerOrderDetailsPage> {
                                   ? Image.network(
                                       item.productImageUrl!,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => const Icon(
+                                      errorBuilder: (_, _, _) => const Icon(
                                         Icons.inventory_2_outlined,
                                         color: Colors.grey,
                                       ),

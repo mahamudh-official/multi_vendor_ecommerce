@@ -129,8 +129,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
             );
 
-            // Navigate to Order Details
-            context.go('/orders/${state.order.id}');
+            // Navigate directly to Demo Payment screen
+            context.go('/payment/${state.order.id}');
           } else if (state is OrderFailure) {
             setState(() => _isSubmitting = false);
             ScaffoldMessenger.of(context).showSnackBar(

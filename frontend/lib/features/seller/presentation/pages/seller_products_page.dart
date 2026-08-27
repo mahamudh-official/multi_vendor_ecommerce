@@ -22,7 +22,7 @@ class _SellerProductsPageState extends State<SellerProductsPage> {
   final TextEditingController _searchController = TextEditingController();
   bool? _selectedIsActive;
   bool? _selectedLowStock;
-  String _selectedSort = 'newest';
+  final String _selectedSort = 'newest';
 
   @override
   void initState() {

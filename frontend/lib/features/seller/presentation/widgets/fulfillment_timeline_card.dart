@@ -17,7 +17,6 @@ class FulfillmentTimelineCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = Theme.of(context).colorScheme.primary;
 
     final steps = [
       FulfillmentStatus.pending,
@@ -54,7 +53,7 @@ class FulfillmentTimelineCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: currentStatus.color.withOpacity(0.12),
+                  color: currentStatus.color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -75,10 +74,10 @@ class FulfillmentTimelineCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFEF4444).withOpacity(0.08),
+                color: const Color(0xFFEF4444).withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: const Color(0xFFEF4444).withOpacity(0.3),
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.3),
                 ),
               ),
               child: const Row(
@@ -224,7 +223,7 @@ class FulfillmentTimelineCard extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withOpacity(0.08),
+                  color: const Color(0xFF10B981).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Row(

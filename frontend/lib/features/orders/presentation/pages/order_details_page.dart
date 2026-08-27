@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -9,6 +10,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/product_image_placeholder.dart';
 import '../../domain/entities/order.dart';
+import '../../domain/entities/order_status.dart';
 import '../bloc/order_bloc.dart';
 import '../bloc/order_event.dart';
 import '../bloc/order_state.dart';
@@ -480,6 +482,28 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xl2),
+
+                    // ── Payment Button (if unpaid and not cancelled) ────────
+                    if (order.paymentStatus != 'paid' &&
+                        order.status != OrderStatus.cancelled) ...[
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton.icon(
+                          onPressed: () => context.push('/payment/${order.id}'),
+                          icon: const Icon(Icons.payment_rounded),
+                          label: Text(
+                            'Pay Now \$${order.totalAmount.toStringAsFixed(2)} (Demo)',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColorsLight.primary,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
 
                     // ── Cancellation Button (if cancellable) ───────────────
                     if (order.status.isCancellable) ...[

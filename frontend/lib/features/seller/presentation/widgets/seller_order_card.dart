@@ -51,7 +51,7 @@ class SellerOrderCard extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: order.status.color.withOpacity(0.12),
+                        color: order.status.color.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(

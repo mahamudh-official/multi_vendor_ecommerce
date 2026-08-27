@@ -138,7 +138,7 @@ class _CreateProductPageState extends State<CreateProductPage> {
                         ? state.categories
                         : [];
                     return DropdownButtonFormField<String>(
-                      value: _selectedCategoryId,
+                      initialValue: _selectedCategoryId,
                       decoration: const InputDecoration(
                         labelText: 'Category *',
                         hintText: 'Select category',
@@ -241,7 +241,7 @@ class _CreateProductPageState extends State<CreateProductPage> {
                       child: Image.network(
                         _imageUrlController.text.trim(),
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Center(
+                        errorBuilder: (_, _, _) => const Center(
                           child: Text(
                             'Image Preview Failed',
                             style: TextStyle(color: Colors.red),
@@ -272,7 +272,7 @@ class _CreateProductPageState extends State<CreateProductPage> {
                     'When active, the product is visible to marketplace customers',
                   ),
                   value: _isActive,
-                  activeColor: primaryColor,
+                  activeThumbColor: primaryColor,
                   contentPadding: EdgeInsets.zero,
                   onChanged: (val) => setState(() => _isActive = val),
                 ),

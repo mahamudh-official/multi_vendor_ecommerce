@@ -7,6 +7,8 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.auth.models import User
+from app.modules.notifications.models import NotificationType
+from app.modules.notifications.service import NotificationService
 from app.modules.orders.models import FulfillmentStatus, Order, OrderItem, OrderStatus
 from app.modules.products.models import Category, Product, ProductImage
 from app.modules.products.repository import CategoryRepository
@@ -51,10 +53,12 @@ class SellerService:
         seller_repo: SellerRepository,
         category_repo: CategoryRepository,
         session: AsyncSession,
+        notification_service: Optional[NotificationService] = None,
     ) -> None:
         self.seller_repo = seller_repo
         self.category_repo = category_repo
         self.session = session
+        self.notification_service = notification_service
 
     # ── Dashboard ───────────────────────────────────────────────────────────
 
@@ -404,6 +408,45 @@ class SellerService:
             overall_status = await self.seller_repo.synchronize_overall_order_status(
                 order_id=order_id
             )
+
+            # Trigger fulfillment notification to customer
+            if self.notification_service:
+                status_type_map = {
+                    FulfillmentStatus.CONFIRMED: (
+                        NotificationType.ORDER_CONFIRMED,
+                        "Order Confirmed",
+                        f"Items from your order #{order.order_number} have been confirmed by the seller.",
+                    ),
+                    FulfillmentStatus.PROCESSING: (
+                        NotificationType.ORDER_PROCESSING,
+                        "Order Processing",
+                        f"Items from your order #{order.order_number} are now being packed and processed.",
+                    ),
+                    FulfillmentStatus.SHIPPED: (
+                        NotificationType.ORDER_SHIPPED,
+                        "Order Shipped",
+                        f"Items from your order #{order.order_number} have been shipped.",
+                    ),
+                    FulfillmentStatus.DELIVERED: (
+                        NotificationType.ORDER_DELIVERED,
+                        "Order Delivered",
+                        f"Items from your order #{order.order_number} have been delivered.",
+                    ),
+                }
+                if new_status in status_type_map:
+                    n_type, n_title, n_msg = status_type_map[new_status]
+                    await self.notification_service.send_notification(
+                        user_id=order.user_id,
+                        type=n_type,
+                        title=n_title,
+                        message=n_msg,
+                        data={
+                            "order_id": str(order.id),
+                            "order_number": order.order_number,
+                            "fulfillment_status": new_status.value,
+                            "order_status": overall_status.value,
+                        },
+                    )
 
             await self.session.commit()
 

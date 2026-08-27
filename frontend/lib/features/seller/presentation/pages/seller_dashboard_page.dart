@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multi_vendor_ecommerce/core/theme/app_colors.dart';
 import 'package:multi_vendor_ecommerce/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:multi_vendor_ecommerce/features/auth/presentation/bloc/auth_state.dart';
+import 'package:multi_vendor_ecommerce/features/notifications/presentation/widgets/notification_badge_icon.dart';
 import 'package:multi_vendor_ecommerce/features/seller/presentation/bloc/seller_dashboard/seller_dashboard_bloc.dart';
 import 'package:multi_vendor_ecommerce/features/seller/presentation/widgets/seller_order_card.dart';
 import 'package:multi_vendor_ecommerce/features/seller/presentation/widgets/seller_product_card.dart';
@@ -35,6 +36,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
         actions: [
+          const NotificationBadgeIcon(),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             tooltip: 'Refresh Dashboard',
@@ -120,7 +122,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                                       const Color(0xFF0F172A),
                                     ]
                                   : [
-                                      primaryColor.withOpacity(0.08),
+                                      primaryColor.withValues(alpha: 0.08),
                                       Colors.white,
                                     ],
                               begin: Alignment.topLeft,
@@ -130,14 +132,14 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                             border: Border.all(
                               color: isDark
                                   ? const Color(0xFF334155)
-                                  : primaryColor.withOpacity(0.2),
+                                  : primaryColor.withValues(alpha: 0.2),
                             ),
                           ),
                           child: Row(
                             children: [
                               CircleAvatar(
                                 radius: 26,
-                                backgroundColor: primaryColor.withOpacity(0.2),
+                                backgroundColor: primaryColor.withValues(alpha: 0.2),
                                 child: Text(
                                   (user?.fullName.isNotEmpty ?? false)
                                       ? user!.fullName[0].toUpperCase()
@@ -187,7 +189,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: primaryColor.withOpacity(0.12),
+                                  color: primaryColor.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(

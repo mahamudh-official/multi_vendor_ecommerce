@@ -42,7 +42,7 @@ class SellerProductCard extends StatelessWidget {
                   ? Image.network(
                       product.imageUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(
+                      errorBuilder: (_, _, _) => const Icon(
                         Icons.image_not_supported_outlined,
                         color: Colors.grey,
                       ),
@@ -77,8 +77,8 @@ class SellerProductCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: product.isActive
-                            ? const Color(0xFF10B981).withOpacity(0.12)
-                            : const Color(0xFFEF4444).withOpacity(0.12),
+                            ? const Color(0xFF10B981).withValues(alpha: 0.12)
+                            : const Color(0xFFEF4444).withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
