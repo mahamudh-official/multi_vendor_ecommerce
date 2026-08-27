@@ -19,6 +19,13 @@ class UserRole(str, enum.Enum):
     admin = "admin"
 
 
+class SellerStatus(str, enum.Enum):
+    """Seller onboarding and operational status."""
+    pending = "pending"
+    approved = "approved"
+    suspended = "suspended"
+
+
 class User(Base):
     """
     User account model.
@@ -55,6 +62,13 @@ class User(Base):
         nullable=False,
         default=UserRole.customer,
         server_default=UserRole.customer.value,
+    )
+    seller_status: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+        default=SellerStatus.approved.value,
+        server_default=SellerStatus.approved.value,
+        index=True,
     )
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default="true"

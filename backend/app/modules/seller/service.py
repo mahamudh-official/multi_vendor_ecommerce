@@ -163,6 +163,12 @@ class SellerService:
         data: SellerProductCreate,
         low_stock_threshold: int = DEFAULT_LOW_STOCK_THRESHOLD,
     ) -> SellerProductRead:
+        if seller.seller_status == "suspended":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Seller account is suspended. You cannot create products.",
+            )
+
         # Validate Category
         category = await self.category_repo.get_by_id(data.category_id)
         if not category or not category.is_active:
@@ -206,6 +212,12 @@ class SellerService:
         data: SellerProductUpdate,
         low_stock_threshold: int = DEFAULT_LOW_STOCK_THRESHOLD,
     ) -> SellerProductRead:
+        if seller.seller_status == "suspended":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Seller account is suspended. You cannot edit products.",
+            )
+
         product = await self.seller_repo.get_seller_product(
             seller_id=seller.id,
             product_id=product_id,
@@ -259,6 +271,12 @@ class SellerService:
         seller: User,
         product_id: uuid.UUID,
     ) -> None:
+        if seller.seller_status == "suspended":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Seller account is suspended. You cannot modify products.",
+            )
+
         product = await self.seller_repo.get_seller_product(
             seller_id=seller.id,
             product_id=product_id,
@@ -365,6 +383,12 @@ class SellerService:
         Validates state machine transitions and updates fulfillment_status
         for seller's items in the specified order.
         """
+        if seller.seller_status == "suspended":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Seller account is suspended. You cannot update fulfillment status.",
+            )
+
         result = await self.seller_repo.get_seller_order_with_items(
             seller_id=seller.id,
             order_id=order_id,

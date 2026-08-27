@@ -73,6 +73,11 @@ import '../../features/notifications/data/repositories/notification_repository_i
 import '../../features/notifications/domain/repositories/notification_repository.dart';
 import '../../features/notifications/domain/usecases/notification_usecases.dart';
 import '../../features/notifications/presentation/bloc/notification_bloc.dart';
+import '../../features/admin/data/datasources/admin_remote_datasource.dart';
+import '../../features/admin/data/repositories/admin_repository_impl.dart';
+import '../../features/admin/domain/repositories/admin_repository.dart';
+import '../../features/admin/domain/usecases/admin_usecases.dart';
+import '../../features/admin/presentation/bloc/admin_blocs.dart';
 
 final getIt = GetIt.instance;
 
@@ -415,6 +420,109 @@ Future<void> configureDependencies() async {
       getUnreadCountUseCase: getIt<GetUnreadNotificationCountUseCase>(),
       markReadUseCase: getIt<MarkNotificationReadUseCase>(),
       markAllReadUseCase: getIt<MarkAllNotificationsReadUseCase>(),
+    ),
+  );
+
+  // ── Features: Admin ───────────────────────────────────────────────────────
+  getIt.registerLazySingleton<AdminRemoteDataSource>(
+    () => AdminRemoteDataSourceImpl(dio: getIt<DioClient>().client),
+  );
+  getIt.registerLazySingleton<AdminRepository>(
+    () => AdminRepositoryImpl(remoteDataSource: getIt<AdminRemoteDataSource>()),
+  );
+
+  // Admin Use Cases
+  getIt.registerLazySingleton<GetAdminDashboardStatsUseCase>(
+    () => GetAdminDashboardStatsUseCase(getIt<AdminRepository>()),
+  );
+  getIt.registerLazySingleton<GetAdminUsersUseCase>(
+    () => GetAdminUsersUseCase(getIt<AdminRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateAdminUserStatusUseCase>(
+    () => UpdateAdminUserStatusUseCase(getIt<AdminRepository>()),
+  );
+  getIt.registerLazySingleton<GetAdminSellersUseCase>(
+    () => GetAdminSellersUseCase(getIt<AdminRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateAdminSellerStatusUseCase>(
+    () => UpdateAdminSellerStatusUseCase(getIt<AdminRepository>()),
+  );
+  getIt.registerLazySingleton<GetAdminProductsUseCase>(
+    () => GetAdminProductsUseCase(getIt<AdminRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateAdminProductStatusUseCase>(
+    () => UpdateAdminProductStatusUseCase(getIt<AdminRepository>()),
+  );
+  getIt.registerLazySingleton<GetAdminCategoriesUseCase>(
+    () => GetAdminCategoriesUseCase(getIt<AdminRepository>()),
+  );
+  getIt.registerLazySingleton<CreateAdminCategoryUseCase>(
+    () => CreateAdminCategoryUseCase(getIt<AdminRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateAdminCategoryUseCase>(
+    () => UpdateAdminCategoryUseCase(getIt<AdminRepository>()),
+  );
+  getIt.registerLazySingleton<DeleteAdminCategoryUseCase>(
+    () => DeleteAdminCategoryUseCase(getIt<AdminRepository>()),
+  );
+  getIt.registerLazySingleton<GetAdminOrdersUseCase>(
+    () => GetAdminOrdersUseCase(getIt<AdminRepository>()),
+  );
+  getIt.registerLazySingleton<GetAdminOrderDetailsUseCase>(
+    () => GetAdminOrderDetailsUseCase(getIt<AdminRepository>()),
+  );
+  getIt.registerLazySingleton<GetAdminPaymentsUseCase>(
+    () => GetAdminPaymentsUseCase(getIt<AdminRepository>()),
+  );
+  getIt.registerLazySingleton<GetAdminAuditLogsUseCase>(
+    () => GetAdminAuditLogsUseCase(getIt<AdminRepository>()),
+  );
+
+  // Admin BLoCs
+  getIt.registerFactory<AdminDashboardBloc>(
+    () => AdminDashboardBloc(
+      getDashboardStatsUseCase: getIt<GetAdminDashboardStatsUseCase>(),
+    ),
+  );
+  getIt.registerFactory<AdminUsersBloc>(
+    () => AdminUsersBloc(
+      getUsersUseCase: getIt<GetAdminUsersUseCase>(),
+      updateUserStatusUseCase: getIt<UpdateAdminUserStatusUseCase>(),
+    ),
+  );
+  getIt.registerFactory<AdminSellersBloc>(
+    () => AdminSellersBloc(
+      getSellersUseCase: getIt<GetAdminSellersUseCase>(),
+      updateSellerStatusUseCase: getIt<UpdateAdminSellerStatusUseCase>(),
+    ),
+  );
+  getIt.registerFactory<AdminProductsBloc>(
+    () => AdminProductsBloc(
+      getProductsUseCase: getIt<GetAdminProductsUseCase>(),
+      updateProductStatusUseCase: getIt<UpdateAdminProductStatusUseCase>(),
+    ),
+  );
+  getIt.registerFactory<AdminCategoriesBloc>(
+    () => AdminCategoriesBloc(
+      getCategoriesUseCase: getIt<GetAdminCategoriesUseCase>(),
+      createCategoryUseCase: getIt<CreateAdminCategoryUseCase>(),
+      updateCategoryUseCase: getIt<UpdateAdminCategoryUseCase>(),
+      deleteCategoryUseCase: getIt<DeleteAdminCategoryUseCase>(),
+    ),
+  );
+  getIt.registerFactory<AdminOrdersBloc>(
+    () => AdminOrdersBloc(
+      getOrdersUseCase: getIt<GetAdminOrdersUseCase>(),
+      getOrderDetailsUseCase: getIt<GetAdminOrderDetailsUseCase>(),
+    ),
+  );
+  getIt.registerFactory<AdminPaymentsBloc>(
+    () =>
+        AdminPaymentsBloc(getPaymentsUseCase: getIt<GetAdminPaymentsUseCase>()),
+  );
+  getIt.registerFactory<AdminAuditLogsBloc>(
+    () => AdminAuditLogsBloc(
+      getAuditLogsUseCase: getIt<GetAdminAuditLogsUseCase>(),
     ),
   );
 }

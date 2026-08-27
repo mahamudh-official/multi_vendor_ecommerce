@@ -22,6 +22,15 @@ import '../../features/seller/presentation/pages/seller_orders_page.dart';
 import '../../features/seller/presentation/pages/seller_products_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/wishlist/presentation/pages/wishlist_page.dart';
+import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
+import '../../features/admin/presentation/pages/admin_users_page.dart';
+import '../../features/admin/presentation/pages/admin_sellers_page.dart';
+import '../../features/admin/presentation/pages/admin_products_page.dart';
+import '../../features/admin/presentation/pages/admin_categories_page.dart';
+import '../../features/admin/presentation/pages/admin_orders_page.dart';
+import '../../features/admin/presentation/pages/admin_order_details_page.dart';
+import '../../features/admin/presentation/pages/admin_payments_page.dart';
+import '../../features/admin/presentation/pages/admin_audit_logs_page.dart';
 
 /// Application route constants.
 abstract final class AppRoutes {
@@ -54,6 +63,17 @@ abstract final class AppRoutes {
   static const String sellerProductEdit = '/seller/products/:id/edit';
   static const String sellerOrders = '/seller/orders';
   static const String sellerOrderDetails = '/seller/orders/:id';
+
+  // Admin Portal Routes
+  static const String admin = '/admin';
+  static const String adminUsers = '/admin/users';
+  static const String adminSellers = '/admin/sellers';
+  static const String adminProducts = '/admin/products';
+  static const String adminCategories = '/admin/categories';
+  static const String adminOrders = '/admin/orders';
+  static const String adminOrderDetails = '/admin/orders/:id';
+  static const String adminPayments = '/admin/payments';
+  static const String adminAuditLogs = '/admin/audit-logs';
 }
 
 /// Application router configuration using go_router.
@@ -329,6 +349,108 @@ final GoRouter appRouter = GoRouter(
           transitionsBuilder: _slideRightTransition,
         );
       },
+    ),
+
+    // ── Admin Dashboard ──────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.admin,
+      name: 'admin-dashboard',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const AdminDashboardPage(),
+        transitionsBuilder: _fadeTransition,
+      ),
+    ),
+
+    // ── Admin Users ──────────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.adminUsers,
+      name: 'admin-users',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const AdminUsersPage(),
+        transitionsBuilder: _slideRightTransition,
+      ),
+    ),
+
+    // ── Admin Sellers ────────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.adminSellers,
+      name: 'admin-sellers',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const AdminSellersPage(),
+        transitionsBuilder: _slideRightTransition,
+      ),
+    ),
+
+    // ── Admin Products ───────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.adminProducts,
+      name: 'admin-products',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const AdminProductsPage(),
+        transitionsBuilder: _slideRightTransition,
+      ),
+    ),
+
+    // ── Admin Categories ─────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.adminCategories,
+      name: 'admin-categories',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const AdminCategoriesPage(),
+        transitionsBuilder: _slideRightTransition,
+      ),
+    ),
+
+    // ── Admin Orders ─────────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.adminOrders,
+      name: 'admin-orders',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const AdminOrdersPage(),
+        transitionsBuilder: _slideRightTransition,
+      ),
+    ),
+
+    // ── Admin Order Details ──────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.adminOrderDetails,
+      name: 'admin-order-details',
+      pageBuilder: (context, state) {
+        final id = state.pathParameters['id'] ?? '';
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: AdminOrderDetailsPage(orderId: id),
+          transitionsBuilder: _slideRightTransition,
+        );
+      },
+    ),
+
+    // ── Admin Payments ───────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.adminPayments,
+      name: 'admin-payments',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const AdminPaymentsPage(),
+        transitionsBuilder: _slideRightTransition,
+      ),
+    ),
+
+    // ── Admin Audit Logs ─────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.adminAuditLogs,
+      name: 'admin-audit-logs',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const AdminAuditLogsPage(),
+        transitionsBuilder: _slideRightTransition,
+      ),
     ),
   ],
 

@@ -11,6 +11,7 @@ from sqlalchemy import text
 from app.common.exceptions.handlers import register_exception_handlers
 from app.core.config import get_settings
 from app.core.database import AsyncSessionLocal, engine
+from app.modules.admin.router import router as admin_router
 from app.modules.auth.router import router as auth_router
 from app.modules.cart.router import cart_router, wishlist_router
 from app.modules.notifications.router import notifications_router
@@ -87,6 +88,7 @@ app.include_router(order_router, prefix="/api/v1")
 app.include_router(seller_router, prefix="/api/v1")
 app.include_router(payments_router, prefix="/api/v1")
 app.include_router(notifications_router, prefix="/api/v1")
+app.include_router(admin_router, prefix="/api/v1")
 
 
 # ── Health Check ───────────────────────────────────────────────────────────

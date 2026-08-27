@@ -15,6 +15,7 @@ import '../features/products/presentation/bloc/product/product_bloc.dart';
 import '../features/products/presentation/bloc/seller/seller_product_bloc.dart';
 import '../features/payment/presentation/bloc/payment_bloc.dart';
 import '../features/notifications/presentation/bloc/notification_bloc.dart';
+import '../features/admin/presentation/bloc/admin_blocs.dart';
 import '../features/seller/presentation/bloc/seller_dashboard/seller_dashboard_bloc.dart';
 import '../features/seller/presentation/bloc/seller_orders/seller_orders_bloc.dart';
 import '../features/seller/presentation/bloc/seller_products/seller_products_bloc.dart';
@@ -24,7 +25,7 @@ import '../features/wishlist/presentation/bloc/wishlist_event.dart';
 /// Root application widget.
 ///
 /// Wires together:
-/// - MultiBlocProvider (Auth, Catalog, Cart, Wishlist, Order, Seller, Payment, Notification BLoCs)
+/// - MultiBlocProvider (Auth, Catalog, Cart, Wishlist, Order, Seller, Payment, Notification, Admin BLoCs)
 /// - go_router (declarative routing)
 /// - Material 3 light / dark theme
 class MarketoApp extends StatelessWidget {
@@ -56,6 +57,26 @@ class MarketoApp extends StatelessWidget {
         BlocProvider<NotificationBloc>(
           create: (_) =>
               getIt<NotificationBloc>()..add(const UnreadCountRequested()),
+        ),
+        BlocProvider<AdminDashboardBloc>(
+          create: (_) => getIt<AdminDashboardBloc>(),
+        ),
+        BlocProvider<AdminUsersBloc>(create: (_) => getIt<AdminUsersBloc>()),
+        BlocProvider<AdminSellersBloc>(
+          create: (_) => getIt<AdminSellersBloc>(),
+        ),
+        BlocProvider<AdminProductsBloc>(
+          create: (_) => getIt<AdminProductsBloc>(),
+        ),
+        BlocProvider<AdminCategoriesBloc>(
+          create: (_) => getIt<AdminCategoriesBloc>(),
+        ),
+        BlocProvider<AdminOrdersBloc>(create: (_) => getIt<AdminOrdersBloc>()),
+        BlocProvider<AdminPaymentsBloc>(
+          create: (_) => getIt<AdminPaymentsBloc>(),
+        ),
+        BlocProvider<AdminAuditLogsBloc>(
+          create: (_) => getIt<AdminAuditLogsBloc>(),
         ),
       ],
       child: BlocListener<AuthBloc, AuthState>(
