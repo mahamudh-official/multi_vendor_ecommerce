@@ -142,11 +142,11 @@ class _HomePageState extends State<HomePage> {
                   : SliverGrid(
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: AppSpacing.lg,
-                        crossAxisSpacing: AppSpacing.lg,
-                        childAspectRatio: 0.68,
-                      ),
+                            crossAxisCount: 2,
+                            mainAxisSpacing: AppSpacing.lg,
+                            crossAxisSpacing: AppSpacing.lg,
+                            childAspectRatio: 0.68,
+                          ),
                       delegate: SliverChildBuilderDelegate(
                         (context, index) => _ProductCard(
                           product: _filteredProducts[index],
@@ -287,10 +287,7 @@ class _SearchBar extends StatelessWidget {
           color: theme.colorScheme.onSurfaceVariant,
         ),
         suffixIcon: IconButton(
-          icon: Icon(
-            Icons.tune_rounded,
-            color: theme.colorScheme.primary,
-          ),
+          icon: Icon(Icons.tune_rounded, color: theme.colorScheme.primary),
           onPressed: () {},
         ),
         filled: true,
@@ -305,12 +302,12 @@ class _SearchBar extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.full),
-          borderSide: BorderSide(
-            color: theme.colorScheme.primary,
-            width: 1.5,
-          ),
+          borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 14,
+        ),
       ),
     );
   }
@@ -340,7 +337,10 @@ class _HeroBanner extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.onPrimary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(AppRadius.full),
@@ -362,7 +362,10 @@ class _HeroBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.onPrimary,
                     borderRadius: BorderRadius.circular(AppRadius.full),
@@ -390,10 +393,7 @@ class _HeroBanner extends StatelessWidget {
 }
 
 class _CategoryRow extends StatelessWidget {
-  const _CategoryRow({
-    required this.selectedIndex,
-    required this.onSelected,
-  });
+  const _CategoryRow({required this.selectedIndex, required this.onSelected});
 
   final int selectedIndex;
   final ValueChanged<int> onSelected;
@@ -581,7 +581,10 @@ class _ProductCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6),
-                  StarRating(rating: product.rating, count: product.reviewCount),
+                  StarRating(
+                    rating: product.rating,
+                    count: product.reviewCount,
+                  ),
                   const SizedBox(height: 6),
 
                   // Price row

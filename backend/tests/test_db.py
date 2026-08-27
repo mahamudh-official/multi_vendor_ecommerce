@@ -57,3 +57,4 @@ async def test_users_table_exists():
         assert exists is True, "users table should exist after alembic upgrade head"
     finally:
         await engine.dispose()
+

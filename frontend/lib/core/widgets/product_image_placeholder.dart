@@ -27,13 +27,17 @@ class ProductImagePlaceholder extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: isDark ? AppColorsDark.surfaceContainer : AppColorsLight.surfaceContainer,
+        color: isDark
+            ? AppColorsDark.surfaceContainer
+            : AppColorsLight.surfaceContainer,
         borderRadius: BorderRadius.circular(borderRadius ?? AppRadius.md),
       ),
       child: Icon(
         icon,
         size: size * 0.4,
-        color: isDark ? AppColorsDark.onSurfaceVariant : AppColorsLight.onSurfaceVariant,
+        color: isDark
+            ? AppColorsDark.onSurfaceVariant
+            : AppColorsLight.onSurfaceVariant,
       ),
     );
   }
@@ -61,9 +65,10 @@ class _ProductCardSkeletonState extends State<ProductCardSkeleton>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
-    _shimmer = Tween<double>(begin: 0.4, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _shimmer = Tween<double>(
+      begin: 0.4,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -75,7 +80,9 @@ class _ProductCardSkeletonState extends State<ProductCardSkeleton>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark ? AppColorsDark.surfaceContainer : AppColorsLight.neutral200;
+    final baseColor = isDark
+        ? AppColorsDark.surfaceContainer
+        : AppColorsLight.neutral200;
 
     return FadeTransition(
       opacity: _shimmer,
@@ -105,11 +112,23 @@ class _ProductCardSkeletonState extends State<ProductCardSkeleton>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(height: 12, width: widget.width * 0.7, color: baseColor),
+                  Container(
+                    height: 12,
+                    width: widget.width * 0.7,
+                    color: baseColor,
+                  ),
                   const SizedBox(height: 6),
-                  Container(height: 10, width: widget.width * 0.4, color: baseColor),
+                  Container(
+                    height: 10,
+                    width: widget.width * 0.4,
+                    color: baseColor,
+                  ),
                   const SizedBox(height: 8),
-                  Container(height: 14, width: widget.width * 0.5, color: baseColor),
+                  Container(
+                    height: 14,
+                    width: widget.width * 0.5,
+                    color: baseColor,
+                  ),
                 ],
               ),
             ),

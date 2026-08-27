@@ -19,11 +19,7 @@ class NetworkException extends AppException {
 }
 
 class ServerException extends AppException {
-  const ServerException({
-    required super.message,
-    super.code,
-    this.statusCode,
-  });
+  const ServerException({required super.message, super.code, this.statusCode});
 
   final int? statusCode;
 

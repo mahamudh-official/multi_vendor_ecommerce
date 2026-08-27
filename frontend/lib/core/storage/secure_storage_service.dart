@@ -14,9 +14,7 @@ class SecureStorageService {
 
   // flutter_secure_storage v11 uses cipher algorithm options instead of
   // the deprecated encryptedSharedPreferences flag.
-  static const _androidOptions = AndroidOptions(
-    resetOnError: true,
-  );
+  static const _androidOptions = AndroidOptions(resetOnError: true);
 
   // ── Access Token ────────────────────────────────────────────────────────
   Future<void> saveAccessToken(String token) async {
@@ -27,9 +25,7 @@ class SecureStorageService {
         aOptions: _androidOptions,
       );
     } catch (e) {
-      throw CacheException(
-        message: 'Failed to save access token: $e',
-      );
+      throw CacheException(message: 'Failed to save access token: $e');
     }
   }
 
@@ -40,9 +36,7 @@ class SecureStorageService {
         aOptions: _androidOptions,
       );
     } catch (e) {
-      throw CacheException(
-        message: 'Failed to read access token: $e',
-      );
+      throw CacheException(message: 'Failed to read access token: $e');
     }
   }
 
@@ -55,9 +49,7 @@ class SecureStorageService {
         aOptions: _androidOptions,
       );
     } catch (e) {
-      throw CacheException(
-        message: 'Failed to save refresh token: $e',
-      );
+      throw CacheException(message: 'Failed to save refresh token: $e');
     }
   }
 
@@ -68,9 +60,7 @@ class SecureStorageService {
         aOptions: _androidOptions,
       );
     } catch (e) {
-      throw CacheException(
-        message: 'Failed to read refresh token: $e',
-      );
+      throw CacheException(message: 'Failed to read refresh token: $e');
     }
   }
 
@@ -94,15 +84,22 @@ class SecureStorageService {
   Future<void> clearAuthData() async {
     try {
       await Future.wait([
-        _storage.delete(key: AppConstants.accessTokenKey, aOptions: _androidOptions),
-        _storage.delete(key: AppConstants.refreshTokenKey, aOptions: _androidOptions),
+        _storage.delete(
+          key: AppConstants.accessTokenKey,
+          aOptions: _androidOptions,
+        ),
+        _storage.delete(
+          key: AppConstants.refreshTokenKey,
+          aOptions: _androidOptions,
+        ),
         _storage.delete(key: AppConstants.userIdKey, aOptions: _androidOptions),
-        _storage.delete(key: AppConstants.userRoleKey, aOptions: _androidOptions),
+        _storage.delete(
+          key: AppConstants.userRoleKey,
+          aOptions: _androidOptions,
+        ),
       ]);
     } catch (e) {
-      throw CacheException(
-        message: 'Failed to clear auth data: $e',
-      );
+      throw CacheException(message: 'Failed to clear auth data: $e');
     }
   }
 

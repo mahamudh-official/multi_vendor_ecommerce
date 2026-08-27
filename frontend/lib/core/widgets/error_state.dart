@@ -32,11 +32,7 @@ class ErrorState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 64,
-              color: theme.colorScheme.error,
-            ),
+            Icon(icon, size: 64, color: theme.colorScheme.error),
             const SizedBox(height: AppSpacing.lg),
             Text(
               title,

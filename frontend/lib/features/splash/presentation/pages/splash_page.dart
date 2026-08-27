@@ -77,10 +77,7 @@ class _SplashPageState extends State<SplashPage>
           builder: (context, child) {
             return FadeTransition(
               opacity: _opacity,
-              child: ScaleTransition(
-                scale: _scale,
-                child: child,
-              ),
+              child: ScaleTransition(scale: _scale, child: child),
             );
           },
           child: Column(
@@ -97,7 +94,9 @@ class _SplashPageState extends State<SplashPage>
                 child: Icon(
                   Icons.storefront_rounded,
                   size: 40,
-                  color: isDark ? AppColorsDark.onPrimary : AppColorsLight.onPrimary,
+                  color: isDark
+                      ? AppColorsDark.onPrimary
+                      : AppColorsLight.onPrimary,
                 ),
               ),
 

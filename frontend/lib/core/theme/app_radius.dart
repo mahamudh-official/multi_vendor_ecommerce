@@ -12,12 +12,12 @@ abstract final class AppRadius {
   static const double full = 999.0;
 
   // ── Semantic aliases ───────────────────────────────────────────────────
-  static const double button = md;         // 12
-  static const double card = lg;           // 16
-  static const double chip = full;         // pill
-  static const double textField = sm;      // 8
-  static const double modal = xl;          // 20
-  static const double productCard = lg;    // 16
-  static const double avatar = full;       // circle
-  static const double badge = full;        // pill
+  static const double button = md; // 12
+  static const double card = lg; // 16
+  static const double chip = full; // pill
+  static const double textField = sm; // 8
+  static const double modal = xl; // 20
+  static const double productCard = lg; // 16
+  static const double avatar = full; // circle
+  static const double badge = full; // pill
 }

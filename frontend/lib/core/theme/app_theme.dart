@@ -66,7 +66,10 @@ abstract final class AppTheme {
       ),
 
       // ── Typography ─────────────────────────────────────────────────────
-      textTheme: _buildTextTheme(AppColorsLight.onSurface, AppColorsLight.onSurfaceVariant),
+      textTheme: _buildTextTheme(
+        AppColorsLight.onSurface,
+        AppColorsLight.onSurfaceVariant,
+      ),
 
       // ── Card ───────────────────────────────────────────────────────────
       cardTheme: CardThemeData(
@@ -139,16 +142,25 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.circular(AppRadius.textField),
           borderSide: BorderSide(color: AppColorsLight.error),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColorsLight.onSurfaceVariant),
-        labelStyle: AppTextStyles.bodyMedium.copyWith(color: AppColorsLight.onSurfaceVariant),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        hintStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColorsLight.onSurfaceVariant,
+        ),
+        labelStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColorsLight.onSurfaceVariant,
+        ),
       ),
 
       // ── Chip ───────────────────────────────────────────────────────────
       chipTheme: ChipThemeData(
         backgroundColor: AppColorsLight.surfaceVariant,
         selectedColor: AppColorsLight.primary,
-        labelStyle: AppTextStyles.labelMedium.copyWith(color: AppColorsLight.onSurface),
+        labelStyle: AppTextStyles.labelMedium.copyWith(
+          color: AppColorsLight.onSurface,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.chip),
           side: BorderSide(color: AppColorsLight.outline),
@@ -175,13 +187,20 @@ abstract final class AppTheme {
           if (states.contains(WidgetState.selected)) {
             return IconThemeData(color: AppColorsLight.primary, size: 24);
           }
-          return IconThemeData(color: AppColorsLight.onSurfaceVariant, size: 24);
+          return IconThemeData(
+            color: AppColorsLight.onSurfaceVariant,
+            size: 24,
+          );
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return AppTextStyles.labelSmall.copyWith(color: AppColorsLight.primary);
+            return AppTextStyles.labelSmall.copyWith(
+              color: AppColorsLight.primary,
+            );
           }
-          return AppTextStyles.labelSmall.copyWith(color: AppColorsLight.onSurfaceVariant);
+          return AppTextStyles.labelSmall.copyWith(
+            color: AppColorsLight.onSurfaceVariant,
+          );
         }),
         elevation: 0,
         height: 72,
@@ -195,10 +214,7 @@ abstract final class AppTheme {
       ),
 
       // ── Icon ───────────────────────────────────────────────────────────
-      iconTheme: IconThemeData(
-        color: AppColorsLight.onSurface,
-        size: 24,
-      ),
+      iconTheme: IconThemeData(color: AppColorsLight.onSurface, size: 24),
     );
   }
 
@@ -256,7 +272,10 @@ abstract final class AppTheme {
       ),
 
       // ── Typography ─────────────────────────────────────────────────────
-      textTheme: _buildTextTheme(AppColorsDark.onSurface, AppColorsDark.onSurfaceVariant),
+      textTheme: _buildTextTheme(
+        AppColorsDark.onSurface,
+        AppColorsDark.onSurfaceVariant,
+      ),
 
       // ── Card ───────────────────────────────────────────────────────────
       cardTheme: CardThemeData(
@@ -329,16 +348,25 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.circular(AppRadius.textField),
           borderSide: BorderSide(color: AppColorsDark.error),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColorsDark.onSurfaceVariant),
-        labelStyle: AppTextStyles.bodyMedium.copyWith(color: AppColorsDark.onSurfaceVariant),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        hintStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColorsDark.onSurfaceVariant,
+        ),
+        labelStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColorsDark.onSurfaceVariant,
+        ),
       ),
 
       // ── Chip ───────────────────────────────────────────────────────────
       chipTheme: ChipThemeData(
         backgroundColor: AppColorsDark.surfaceVariant,
         selectedColor: AppColorsDark.accent,
-        labelStyle: AppTextStyles.labelMedium.copyWith(color: AppColorsDark.onSurface),
+        labelStyle: AppTextStyles.labelMedium.copyWith(
+          color: AppColorsDark.onSurface,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.chip),
           side: BorderSide(color: AppColorsDark.outline),
@@ -369,9 +397,13 @@ abstract final class AppTheme {
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return AppTextStyles.labelSmall.copyWith(color: AppColorsDark.primary);
+            return AppTextStyles.labelSmall.copyWith(
+              color: AppColorsDark.primary,
+            );
           }
-          return AppTextStyles.labelSmall.copyWith(color: AppColorsDark.onSurfaceVariant);
+          return AppTextStyles.labelSmall.copyWith(
+            color: AppColorsDark.onSurfaceVariant,
+          );
         }),
         elevation: 0,
         height: 72,
@@ -385,10 +417,7 @@ abstract final class AppTheme {
       ),
 
       // ── Icon ───────────────────────────────────────────────────────────
-      iconTheme: IconThemeData(
-        color: AppColorsDark.onSurface,
-        size: 24,
-      ),
+      iconTheme: IconThemeData(color: AppColorsDark.onSurface, size: 24),
     );
   }
 

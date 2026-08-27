@@ -54,27 +54,23 @@ void main() {
   });
 
   group('SplashPage', () {
-    testWidgets('renders logo and app name before navigation fires', (tester) async {
+    testWidgets('renders logo and app name before navigation fires', (
+      tester,
+    ) async {
       // Wrap SplashPage with a GoRouter so context.go() works
       final router = GoRouter(
         initialLocation: '/',
         routes: [
-          GoRoute(
-            path: '/',
-            builder: (_, __) => const SplashPage(),
-          ),
+          GoRoute(path: '/', builder: (_, _) => const SplashPage()),
           GoRoute(
             path: '/welcome',
-            builder: (_, __) => const Scaffold(body: Text('Welcome')),
+            builder: (_, _) => const Scaffold(body: Text('Welcome')),
           ),
         ],
       );
 
       await tester.pumpWidget(
-        MaterialApp.router(
-          theme: AppTheme.light,
-          routerConfig: router,
-        ),
+        MaterialApp.router(theme: AppTheme.light, routerConfig: router),
       );
 
       // Pump to show initial frame (before 1800ms timer fires)

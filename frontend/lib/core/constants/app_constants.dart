@@ -5,8 +5,10 @@ abstract final class AppConstants {
   AppConstants._();
 
   // ── API ────────────────────────────────────────────────────────────────
-  static const String apiBaseUrl = 'http://10.0.2.2:8000/api/v1'; // Android emulator
-  static const String apiBaseUrlLocal = 'http://localhost:8000/api/v1'; // iOS simulator / Web
+  static const String apiBaseUrl =
+      'http://10.0.2.2:8000/api/v1'; // Android emulator
+  static const String apiBaseUrlLocal =
+      'http://localhost:8000/api/v1'; // iOS simulator / Web
 
   // ── Timeouts ──────────────────────────────────────────────────────────
   static const Duration connectTimeout = Duration(seconds: 30);
@@ -23,7 +25,8 @@ abstract final class AppConstants {
   static const int defaultPageSize = 20;
 
   // ── UI ─────────────────────────────────────────────────────────────────
-  static const double maxContentWidth = 600; // Max width for content on wide screens
+  static const double maxContentWidth =
+      600; // Max width for content on wide screens
   static const String appName = 'Marketo';
   static const String appTagline = 'Shop from trusted sellers';
 }

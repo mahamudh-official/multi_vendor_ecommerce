@@ -25,7 +25,6 @@ class MarketoApp extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system, // Respect OS preference
-
       // ── Localization (Step N will add intl support) ───────────────────────
       // localizationsDelegates: AppLocalizations.localizationsDelegates,
       // supportedLocales: AppLocalizations.supportedLocales,

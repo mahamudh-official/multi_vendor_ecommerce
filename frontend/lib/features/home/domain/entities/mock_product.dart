@@ -26,8 +26,7 @@ class MockProduct {
   final String sellerName;
   final String? badge;
 
-  bool get hasDiscount =>
-      originalPrice != null && originalPrice! > price;
+  bool get hasDiscount => originalPrice != null && originalPrice! > price;
 
   double get discountPercent {
     if (!hasDiscount) return 0;

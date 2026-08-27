@@ -17,14 +17,16 @@ down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
+# PostgreSQL native ENUM for user roles
+user_role_enum = postgresql.ENUM('customer', 'seller', 'admin', name='userrole')
+
 
 def upgrade() -> None:
-    """Create the initial users table."""
+    """Create userrole enum type and users table."""
+    # 1. Explicitly create the enum type if not exists
+    user_role_enum.create(op.get_bind(), checkfirst=True)
 
-    # Create the UserRole enum type
-    op.execute("CREATE TYPE userrole AS ENUM ('customer', 'seller', 'admin')")
-
-    # Create users table
+    # 2. Create users table referencing the existing enum type with create_type=False
     op.create_table(
         'users',
         sa.Column(
@@ -38,7 +40,7 @@ def upgrade() -> None:
         sa.Column('password_hash', sa.String(length=1024), nullable=False),
         sa.Column(
             'role',
-            sa.Enum('customer', 'seller', 'admin', name='userrole', create_type=False),
+            postgresql.ENUM('customer', 'seller', 'admin', name='userrole', create_type=False),
             nullable=False,
             server_default='customer',
         ),
@@ -69,8 +71,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Drop users table and enum type."""
+    """Drop users table and userrole enum type."""
     op.drop_index(op.f('ix_users_email'), table_name='users')
     op.drop_index(op.f('ix_users_id'), table_name='users')
     op.drop_table('users')
-    op.execute('DROP TYPE IF EXISTS userrole')
+    user_role_enum.drop(op.get_bind(), checkfirst=True)

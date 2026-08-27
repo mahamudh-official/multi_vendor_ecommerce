@@ -44,3 +44,4 @@ class LoginRequest(BaseModel):
     """Credentials for login — Step 2."""
     email: EmailStr
     password: str
+

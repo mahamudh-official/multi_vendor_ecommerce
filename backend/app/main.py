@@ -95,3 +95,4 @@ async def health_check() -> dict:
 @app.get("/", tags=["root"], include_in_schema=False)
 async def root() -> dict:
     return {"message": f"Welcome to {settings.app_name}", "docs": "/docs"}
+

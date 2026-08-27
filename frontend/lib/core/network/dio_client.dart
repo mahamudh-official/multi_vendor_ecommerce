@@ -10,10 +10,7 @@ import '../error/exceptions.dart';
 class DioClient {
   DioClient() {
     _dio = Dio(_baseOptions);
-    _dio.interceptors.addAll([
-      _LoggingInterceptor(),
-      _ErrorInterceptor(),
-    ]);
+    _dio.interceptors.addAll([_LoggingInterceptor(), _ErrorInterceptor()]);
   }
 
   late final Dio _dio;
@@ -23,10 +20,7 @@ class DioClient {
     connectTimeout: AppConstants.connectTimeout,
     receiveTimeout: AppConstants.receiveTimeout,
     sendTimeout: AppConstants.sendTimeout,
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
+    headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
   );
 
   Dio get client => _dio;
@@ -123,10 +117,10 @@ class _ErrorInterceptor extends Interceptor {
       404 => NotFoundException(message: detail ?? 'Resource not found.'),
       409 => ConflictException(message: detail ?? 'Resource already exists.'),
       _ => ServerException(
-          message: detail ?? 'Server error. Please try again.',
-          statusCode: statusCode,
-          code: 'SERVER_ERROR',
-        ),
+        message: detail ?? 'Server error. Please try again.',
+        statusCode: statusCode,
+        code: 'SERVER_ERROR',
+      ),
     };
   }
 }

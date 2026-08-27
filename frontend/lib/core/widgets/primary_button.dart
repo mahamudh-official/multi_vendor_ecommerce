@@ -40,9 +40,10 @@ class _PrimaryButtonState extends State<PrimaryButton>
       lowerBound: 0,
       upperBound: 1,
     );
-    _scale = Tween<double>(begin: 1, end: 0.96).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scale = Tween<double>(
+      begin: 1,
+      end: 0.96,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -88,7 +89,9 @@ class _PrimaryButtonState extends State<PrimaryButton>
                         Icon(
                           widget.icon,
                           color: isDisabled
-                              ? theme.colorScheme.onSurface.withValues(alpha: 0.38)
+                              ? theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.38,
+                                )
                               : theme.colorScheme.onPrimary,
                           size: 20,
                         ),
@@ -98,7 +101,9 @@ class _PrimaryButtonState extends State<PrimaryButton>
                         widget.label,
                         style: AppTextStyles.labelLarge.copyWith(
                           color: isDisabled
-                              ? theme.colorScheme.onSurface.withValues(alpha: 0.38)
+                              ? theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.38,
+                                )
                               : theme.colorScheme.onPrimary,
                         ),
                       ),
