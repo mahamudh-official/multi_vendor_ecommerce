@@ -339,53 +339,63 @@ async def run_step12_verification():
 
     # 2. Construct mock Stripe event payload
     from app.core.config import get_settings
-    webhook_secret = get_settings().stripe_webhook_secret or "whsec_step12_verification_secret_key"
-    payload_dict = {
-        "id": f"evt_{uuid.uuid4().hex[:8]}",
-        "type": "payment_intent.succeeded",
-        "data": {
-            "object": {
-                "id": provider_pi_id,
-                "status": "succeeded",
-                "amount": int(float(pay3_data["amount"]) * 100),
-                "currency": "usd",
+    _settings = get_settings()
+    configured_webhook_secret = _settings.stripe_webhook_secret
+
+    if not configured_webhook_secret:
+        print("[SKIP] 16. Stripe Webhook bad-signature rejection — STRIPE_WEBHOOK_SECRET not configured (REQUIRES EXTERNAL CONFIGURATION).")
+        print("[SKIP] 17. Stripe Webhook valid-signature verification — STRIPE_WEBHOOK_SECRET not configured (REQUIRES EXTERNAL CONFIGURATION).")
+        print("[SKIP] 18. Stripe Webhook idempotency — STRIPE_WEBHOOK_SECRET not configured (REQUIRES EXTERNAL CONFIGURATION).")
+        _stripe_skipped = True
+    else:
+        _stripe_skipped = False
+        webhook_secret = configured_webhook_secret
+        payload_dict = {
+            "id": f"evt_{uuid.uuid4().hex[:8]}",
+            "type": "payment_intent.succeeded",
+            "data": {
+                "object": {
+                    "id": provider_pi_id,
+                    "status": "succeeded",
+                    "amount": int(float(pay3_data["amount"]) * 100),
+                    "currency": "usd",
+                }
             }
         }
-    }
-    payload_str = json.dumps(payload_dict)
-    timestamp = int(time.time())
-    signed_payload = f"{timestamp}.{payload_str}"
-    signature = hmac.new(webhook_secret.encode("utf-8"), signed_payload.encode("utf-8"), hashlib.sha256).hexdigest()
-    sig_header = f"t={timestamp},v1={signature}"
+        payload_str = json.dumps(payload_dict)
+        timestamp = int(time.time())
+        signed_payload = f"{timestamp}.{payload_str}"
+        signature = hmac.new(webhook_secret.encode("utf-8"), signed_payload.encode("utf-8"), hashlib.sha256).hexdigest()
+        sig_header = f"t={timestamp},v1={signature}"
 
-    # A. Invalid signature -> 400
-    r_wh_bad = await client.post(
-        f"{BASE_URL}/payments/stripe/webhook",
-        content=payload_str,
-        headers={"Stripe-Signature": "t=12345,v1=invalid_sig_hash"}
-    )
-    assert r_wh_bad.status_code == 400
-    print("[PASS] 16. Stripe Webhook rejected invalid signature with HTTP 400.")
+        # A. Invalid signature -> 400
+        r_wh_bad = await client.post(
+            f"{BASE_URL}/payments/stripe/webhook",
+            content=payload_str,
+            headers={"Stripe-Signature": "t=12345,v1=invalid_sig_hash"}
+        )
+        assert r_wh_bad.status_code == 400
+        print("[PASS] 16. Stripe Webhook rejected invalid signature with HTTP 400.")
 
-    # B. Valid signature -> 200 Succeeded
-    r_wh_good = await client.post(
-        f"{BASE_URL}/payments/stripe/webhook",
-        content=payload_str,
-        headers={"Stripe-Signature": sig_header}
-    )
-    assert r_wh_good.status_code == 200
-    assert r_wh_good.json()["status"] == "success"
-    print("[PASS] 17. Stripe Webhook validated signature & updated payment state atomically.")
+        # B. Valid signature -> 200 Succeeded
+        r_wh_good = await client.post(
+            f"{BASE_URL}/payments/stripe/webhook",
+            content=payload_str,
+            headers={"Stripe-Signature": sig_header}
+        )
+        assert r_wh_good.status_code == 200
+        assert r_wh_good.json()["status"] == "success"
+        print("[PASS] 17. Stripe Webhook validated signature & updated payment state atomically.")
 
-    # C. Idempotent replay -> 200 Idempotent
-    r_wh_replay = await client.post(
-        f"{BASE_URL}/payments/stripe/webhook",
-        content=payload_str,
-        headers={"Stripe-Signature": sig_header}
-    )
-    assert r_wh_replay.status_code == 200
-    assert "Idempotent" in r_wh_replay.json()["message"]
-    print("[PASS] 18. Stripe Webhook idempotency verified: duplicate event safely acknowledged.")
+        # C. Idempotent replay -> 200 Idempotent
+        r_wh_replay = await client.post(
+            f"{BASE_URL}/payments/stripe/webhook",
+            content=payload_str,
+            headers={"Stripe-Signature": sig_header}
+        )
+        assert r_wh_replay.status_code == 200
+        assert "Idempotent" in r_wh_replay.json()["message"]
+        print("[PASS] 18. Stripe Webhook idempotency verified: duplicate event safely acknowledged.")
 
     # ──────────────────────────────────────────────────────────────────────────
     # I. Database Migration & Unique Constraint Check
@@ -400,10 +410,16 @@ async def run_step12_verification():
     print("[PASS] 19. Alembic database migration 0008 & unique review constraint verified.")
 
     print("\n==================================================================")
-    print("ALL 19 / 19 STEP 12 LIVE VERIFICATIONS PASSED WITH ZERO ERRORS!")
+    if _stripe_skipped:
+        print("16 / 19 STEP 12 LIVE VERIFICATIONS PASSED WITH ZERO ERRORS!")
+        print("3 / 19 Stripe webhook checks SKIPPED — REQUIRES EXTERNAL CONFIGURATION")
+        print("(Set STRIPE_WEBHOOK_SECRET to enable full Stripe verification)")
+    else:
+        print("ALL 19 / 19 STEP 12 LIVE VERIFICATIONS PASSED WITH ZERO ERRORS!")
     print("==================================================================")
 
     await client.aclose()
+
 
 
 if __name__ == "__main__":

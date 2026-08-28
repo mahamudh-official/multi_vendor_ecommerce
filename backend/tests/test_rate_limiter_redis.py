@@ -14,9 +14,15 @@ REDIS_TEST_URL = "redis://localhost:6379/0"
 @pytest.fixture
 async def redis_limiter():
     limiter = RedisRateLimiter(REDIS_TEST_URL)
-    await limiter.init()
+    try:
+        await limiter.init()
+        # Quick connectivity probe
+        await limiter.client.ping()
+    except Exception:
+        pytest.skip("Redis not reachable at localhost:6379 — skipping live Redis sliding window test")
     yield limiter
     await limiter.close()
+
 
 
 @pytest.mark.asyncio

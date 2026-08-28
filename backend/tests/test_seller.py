@@ -13,8 +13,8 @@ from tests.test_categories import create_test_user
 
 @pytest.fixture
 async def seller_setup(client: AsyncClient) -> dict:
-    """Fixture providing an active category, two distinct sellers, and a customer."""
-    _, admin_token = await create_test_user(UserRole.admin)
+    """Fixture providing an active category, two distinct sellers, a customer, and an admin."""
+    admin_user, admin_token = await create_test_user(UserRole.admin)
     cat_res = await client.post(
         "/api/v1/categories",
         headers={"Authorization": f"Bearer {admin_token}"},
@@ -22,15 +22,21 @@ async def seller_setup(client: AsyncClient) -> dict:
     )
     cat_id = cat_res.json()["id"]
 
-    _, seller_a_token = await create_test_user(UserRole.seller)
-    _, seller_b_token = await create_test_user(UserRole.seller)
+    seller_a_user, seller_a_token = await create_test_user(UserRole.seller)
+    seller_b_user, seller_b_token = await create_test_user(UserRole.seller)
     _, customer_token = await create_test_user(UserRole.customer)
 
     return {
         "cat_id": cat_id,
+        # seller_a is the primary seller used in most tests
         "seller_a_token": seller_a_token,
         "seller_b_token": seller_b_token,
         "customer_token": customer_token,
+        # Aliases for the suspended-seller test
+        "seller_id": str(seller_a_user.id),
+        "seller_token": seller_a_token,
+        "admin_token": admin_token,
+        "category_id": cat_id,
     }
 
 
@@ -404,4 +410,6 @@ async def test_suspended_seller_cannot_mutate_resources(
         },
         headers=seller_auth,
     )
-    a
+    assert r_prod.status_code == 403, (
+        f"Expected 403 Forbidden for suspended seller, got {r_prod.status_code}: {r_prod.text}"
+    )

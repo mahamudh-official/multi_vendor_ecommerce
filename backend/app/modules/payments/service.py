@@ -1,3 +1,4 @@
+import logging
 import uuid
 from decimal import Decimal
 from typing import Optional
@@ -19,6 +20,8 @@ from app.modules.payments.schemas import (
     PaymentProcessResponse,
     PaymentRead,
 )
+
+logger = logging.getLogger("app.payments")
 
 
 class PaymentService:
