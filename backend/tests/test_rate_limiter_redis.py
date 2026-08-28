@@ -1,4 +1,5 @@
 import asyncio
+import os
 import time
 import pytest
 from unittest.mock import patch
@@ -7,8 +8,8 @@ from app.core.config import get_settings
 from app.core.rate_limiter import rate_limit
 from app.core.rate_limiter_redis import RedisRateLimiter, get_redis_rate_limiter
 
-# Redis connection URL for local test container
-REDIS_TEST_URL = "redis://localhost:6379/0"
+# Redis connection URL for test environment (defaults to localhost)
+REDIS_TEST_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 
 @pytest.fixture

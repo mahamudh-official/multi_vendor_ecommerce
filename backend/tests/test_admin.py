@@ -51,11 +51,11 @@ async def admin_user(client: AsyncClient, unique_suffix: str) -> dict:
     user_id = r_login.json()["user"]["id"]
 
     # Ensure user has admin role in database
-    from app.core.database import AsyncSessionLocal
     from app.modules.auth.models import User, UserRole
     from sqlalchemy import update
+    from tests.conftest import TestingSessionLocal
 
-    async with AsyncSessionLocal() as session:
+    async with TestingSessionLocal() as session:
         await session.execute(
             update(User).where(User.id == uuid.UUID(user_id)).values(role=UserRole.admin)
         )

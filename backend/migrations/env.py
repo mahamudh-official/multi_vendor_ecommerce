@@ -30,6 +30,8 @@ from app.modules.payments import models as payment_models  # noqa: E402, F401
 from app.modules.notifications import models as notification_models  # noqa: E402, F401
 from app.modules.audit import models as audit_models  # noqa: E402, F401
 from app.modules.reviews import models as review_models  # noqa: E402, F401
+from app.modules.addresses import models as address_models  # noqa: E402, F401
+
 
 # ── Alembic Config ────────────────────────────────────────────────────────────
 config = context.config
