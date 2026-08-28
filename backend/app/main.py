@@ -11,8 +11,9 @@ from sqlalchemy import text
 from app.common.exceptions.handlers import register_exception_handlers
 from app.core.config import get_settings
 from app.core.database import AsyncSessionLocal, engine
+from app.modules.addresses.router import router as addresses_router
 from app.modules.admin.router import router as admin_router
-from app.modules.auth.router import router as auth_router
+from app.modules.auth.router import profile_router, router as auth_router
 from app.modules.cart.router import cart_router, wishlist_router
 from app.modules.notifications.router import notifications_router
 from app.modules.orders.router import order_router
@@ -82,6 +83,8 @@ register_exception_handlers(app)
 
 # ── Routers ────────────────────────────────────────────────────────────────
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(profile_router, prefix="/api/v1")
+app.include_router(addresses_router, prefix="/api/v1")
 app.include_router(products_router, prefix="/api/v1")
 app.include_router(reviews_router, prefix="/api/v1")
 app.include_router(cart_router, prefix="/api/v1")
@@ -93,23 +96,28 @@ app.include_router(notifications_router, prefix="/api/v1")
 app.include_router(admin_router, prefix="/api/v1")
 
 
-# ── Health Check ───────────────────────────────────────────────────────────
+# ── Root & Health Check ───────────────────────────────────────────────────
+@app.get("/", tags=["root"], summary="Welcome message")
+async def root() -> dict:
+    """Root welcome endpoint."""
+    return {
+        "message": f"Welcome to {settings.app_name} API",
+        "version": settings.app_version,
+        "docs": "/docs" if settings.is_development else None,
+    }
+
+
 @app.get("/health", tags=["health"], summary="Health check")
 async def health_check() -> dict:
     """
     Verify the API is running.
 
-    Returns service status and version information.
+    Returns:
+        JSON with app name, version, and status.
     """
     return {
         "status": "ok",
-        "service": settings.app_name,
+        "app": settings.app_name,
         "version": settings.app_version,
         "environment": settings.environment,
     }
-
-
-@app.get("/", tags=["root"], include_in_schema=False)
-async def root() -> dict:
-    return {"message": f"Welcome to {settings.app_name}", "docs": "/docs"}
-

@@ -13,6 +13,10 @@ abstract interface class OrderRemoteDataSource {
 
   Future<List<OrderModel>> getOrders({
     OrderStatus? status,
+    String? search,
+    String? sort,
+    DateTime? fromDate,
+    DateTime? toDate,
     int page = 1,
     int pageSize = 10,
   });
@@ -53,14 +57,29 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
   @override
   Future<List<OrderModel>> getOrders({
     OrderStatus? status,
+    String? search,
+    String? sort,
+    DateTime? fromDate,
+    DateTime? toDate,
     int page = 1,
     int pageSize = 10,
   }) async {
-    final queryParams = <String, dynamic>{
-      'page': page,
-      'page_size': pageSize,
-      if (status != null) 'status': status.value,
-    };
+    final queryParams = <String, dynamic>{'page': page, 'page_size': pageSize};
+    if (status != null) {
+      queryParams['status'] = status.value;
+    }
+    if (search != null && search.trim().isNotEmpty) {
+      queryParams['search'] = search.trim();
+    }
+    if (sort != null) {
+      queryParams['sort'] = sort;
+    }
+    if (fromDate != null) {
+      queryParams['from_date'] = fromDate.toIso8601String();
+    }
+    if (toDate != null) {
+      queryParams['to_date'] = toDate.toIso8601String();
+    }
 
     final response = await dioClient.get<Map<String, dynamic>>(
       '/orders',

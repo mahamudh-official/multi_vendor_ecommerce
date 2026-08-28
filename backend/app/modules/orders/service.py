@@ -238,6 +238,10 @@ class OrderService:
         self,
         user: User,
         status: Optional[OrderStatus] = None,
+        from_date: Optional[datetime] = None,
+        to_date: Optional[datetime] = None,
+        search: Optional[str] = None,
+        sort: str = "newest",
         page: int = 1,
         page_size: int = 10,
     ) -> OrderListResponse:
@@ -245,6 +249,10 @@ class OrderService:
         orders, total, pages = await self.order_repo.list_orders(
             user_id=user.id,
             status=status,
+            from_date=from_date,
+            to_date=to_date,
+            search=search,
+            sort=sort,
             page=page,
             page_size=page_size,
         )

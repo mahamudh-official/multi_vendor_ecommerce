@@ -17,6 +17,7 @@ from app.modules.auth.schemas import (
     RefreshTokenResponse,
     RegisterRequest,
     TokenResponse,
+    UserProfileUpdate,
     UserRead,
 )
 from app.modules.auth.service import AuthService
@@ -105,3 +106,34 @@ async def logout() -> MessageResponse:
     - Client must discard access and refresh tokens from local secure storage.
     """
     return MessageResponse(message="Successfully logged out.")
+
+
+# ── Profile Management ───────────────────────────────────────────────────────
+profile_router = APIRouter(prefix="/profile", tags=["Profile"])
+
+
+@profile_router.get(
+    "",
+    response_model=UserRead,
+    status_code=status.HTTP_200_OK,
+    summary="Get currently authenticated customer profile",
+)
+async def get_profile(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> UserRead:
+    return UserRead.model_validate(current_user)
+
+
+@profile_router.patch(
+    "",
+    response_model=UserRead,
+    status_code=status.HTTP_200_OK,
+    summary="Update customer profile details (full_name, phone, avatar_url)",
+)
+async def update_profile(
+    request: UserProfileUpdate,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+) -> UserRead:
+    updated_user = await auth_service.update_profile(current_user, request)
+    return UserRead.model_validate(updated_user)

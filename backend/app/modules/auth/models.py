@@ -70,6 +70,8 @@ class User(Base):
         server_default=SellerStatus.approved.value,
         index=True,
     )
+    phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    avatar_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default="true"
     )

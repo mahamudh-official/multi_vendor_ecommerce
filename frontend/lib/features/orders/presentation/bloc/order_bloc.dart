@@ -58,7 +58,13 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     Emitter<OrderState> emit,
   ) async {
     emit(const OrderLoading());
-    final result = await getOrdersUseCase(status: event.status);
+    final result = await getOrdersUseCase(
+      status: event.status,
+      search: event.search,
+      sort: event.sort,
+      fromDate: event.fromDate,
+      toDate: event.toDate,
+    );
 
     result.fold(
       onSuccess: (orders) =>
@@ -71,7 +77,13 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     OrdersRefreshed event,
     Emitter<OrderState> emit,
   ) async {
-    final result = await getOrdersUseCase(status: event.status);
+    final result = await getOrdersUseCase(
+      status: event.status,
+      search: event.search,
+      sort: event.sort,
+      fromDate: event.fromDate,
+      toDate: event.toDate,
+    );
 
     result.fold(
       onSuccess: (orders) =>

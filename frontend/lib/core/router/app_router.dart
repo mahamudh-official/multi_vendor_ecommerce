@@ -33,6 +33,12 @@ import '../../features/admin/presentation/pages/admin_orders_page.dart';
 import '../../features/admin/presentation/pages/admin_order_details_page.dart';
 import '../../features/admin/presentation/pages/admin_payments_page.dart';
 import '../../features/admin/presentation/pages/admin_audit_logs_page.dart';
+import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/profile/presentation/pages/edit_profile_page.dart';
+import '../../features/addresses/domain/entities/address.dart';
+import '../../features/addresses/presentation/pages/address_list_page.dart';
+import '../../features/addresses/presentation/pages/add_edit_address_page.dart';
+import '../../features/seller_analytics/presentation/pages/seller_analytics_page.dart';
 
 /// Application route constants.
 abstract final class AppRoutes {
@@ -51,6 +57,16 @@ abstract final class AppRoutes {
   static const String orders = '/orders';
   static const String orderDetails = '/orders/:id';
   static const String productDetails = '/products/:id';
+
+  // Customer Profile & Address Routes
+  static const String profile = '/profile';
+  static const String profileEdit = '/profile/edit';
+  static const String addresses = '/addresses';
+  static const String addressAdd = '/addresses/add';
+  static const String addressEdit = '/addresses/:id/edit';
+
+  // Seller Analytics Route
+  static const String sellerAnalytics = '/seller/analytics';
 
   // Notifications Route
   static const String notifications = '/notifications';
@@ -479,6 +495,75 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) => CustomTransitionPage(
         key: state.pageKey,
         child: const AdminAuditLogsPage(),
+        transitionsBuilder: _slideRightTransition,
+      ),
+    ),
+
+    // ── Customer Profile ────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.profile,
+      name: 'profile',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const ProfilePage(),
+        transitionsBuilder: _slideRightTransition,
+      ),
+    ),
+
+    // ── Edit Customer Profile ────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.profileEdit,
+      name: 'profile-edit',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const EditProfilePage(),
+        transitionsBuilder: _slideRightTransition,
+      ),
+    ),
+
+    // ── Saved Delivery Addresses ─────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.addresses,
+      name: 'addresses',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const AddressListPage(),
+        transitionsBuilder: _slideRightTransition,
+      ),
+    ),
+
+    // ── Add Address ──────────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.addressAdd,
+      name: 'address-add',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const AddEditAddressPage(),
+        transitionsBuilder: _slideRightTransition,
+      ),
+    ),
+
+    // ── Edit Address ─────────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.addressEdit,
+      name: 'address-edit',
+      pageBuilder: (context, state) {
+        final existingAddress = state.extra as Address?;
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: AddEditAddressPage(existingAddress: existingAddress),
+          transitionsBuilder: _slideRightTransition,
+        );
+      },
+    ),
+
+    // ── Seller Analytics ─────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.sellerAnalytics,
+      name: 'seller-analytics',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const SellerAnalyticsPage(),
         transitionsBuilder: _slideRightTransition,
       ),
     ),

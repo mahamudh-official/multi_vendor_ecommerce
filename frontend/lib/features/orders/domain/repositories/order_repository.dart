@@ -12,6 +12,10 @@ abstract interface class OrderRepository {
 
   Future<Result<List<Order>>> getOrders({
     OrderStatus? status,
+    String? search,
+    String? sort,
+    DateTime? fromDate,
+    DateTime? toDate,
     int page = 1,
     int pageSize = 10,
   });

@@ -167,3 +167,43 @@ class SellerDashboardResponse(BaseModel):
     recent_orders: List[SellerOrderListItemRead]
     low_stock_products: List[SellerProductRead]
 
+
+# ── Detailed Analytics Schemas ──────────────────────────────────────────────
+
+class SellerAnalyticsOverview(BaseModel):
+    total_revenue: Decimal
+    total_orders: int
+    total_items_sold: int
+    average_order_value: Decimal
+    active_products: int
+    low_stock_products: int
+    pending_fulfillment_count: int
+    delivered_order_count: int
+
+
+class SellerSalesPeriodItem(BaseModel):
+    period: str
+    order_count: int
+    item_quantity: int
+    revenue: Decimal
+
+
+class SellerSalesAnalyticsResponse(BaseModel):
+    period_type: str
+    items: List[SellerSalesPeriodItem]
+
+
+class SellerProductAnalyticsItem(BaseModel):
+    product_id: uuid.UUID
+    product_name: str
+    sku: Optional[str] = None
+    revenue: Decimal
+    quantity_sold: int
+    current_stock: int
+    average_rating: float = 0.0
+    review_count: int = 0
+
+
+class SellerProductAnalyticsResponse(BaseModel):
+    items: List[SellerProductAnalyticsItem]
+

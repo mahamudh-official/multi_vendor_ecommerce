@@ -7,10 +7,16 @@ from sqlalchemy import case, distinct, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.modules.orders.models import FulfillmentStatus, Order, OrderItem, OrderStatus
+from app.modules.orders.models import FulfillmentStatus, Order, OrderItem, OrderStatus, PaymentStatus
 from app.modules.products.models import Category, Product
+from app.modules.reviews.models import Review
 from app.modules.seller.constants import DEFAULT_LOW_STOCK_THRESHOLD
-from app.modules.seller.schemas import SellerDashboardStats
+from app.modules.seller.schemas import (
+    SellerAnalyticsOverview,
+    SellerDashboardStats,
+    SellerProductAnalyticsItem,
+    SellerSalesPeriodItem,
+)
 
 
 class SellerRepository:
@@ -342,4 +348,224 @@ class SellerRepository:
         order.status = new_order_status
         await self.session.flush()
         return new_order_status
+
+    # ── Detailed Seller Analytics ───────────────────────────────────────────
+
+    async def get_analytics_overview(
+        self,
+        seller_id: uuid.UUID,
+        low_stock_threshold: int = DEFAULT_LOW_STOCK_THRESHOLD,
+    ) -> SellerAnalyticsOverview:
+        """
+        Calculates authoritative seller KPI metrics:
+        - Revenue & Items Sold: strictly from valid paid & non-cancelled orders
+        - AOV: total_revenue / total_orders
+        - Fulfillment counts: pending vs delivered
+        - Products: active & low stock
+        """
+        # 1. Product counts
+        prod_stmt = select(
+            func.count(case((Product.is_active.is_(True), 1))).label("active"),
+            func.count(
+                case(
+                    (
+                        (Product.is_active.is_(True))
+                        & (Product.stock_quantity <= low_stock_threshold),
+                        1,
+                    )
+                )
+            ).label("low_stock"),
+        ).where(Product.seller_id == seller_id)
+        prod_res = await self.session.execute(prod_stmt)
+        active_prods, low_stock_prods = prod_res.one()
+
+        # 2. Paid orders metrics (Revenue, Distinct Orders, Total Items Sold)
+        paid_metrics_stmt = (
+            select(
+                func.coalesce(func.sum(OrderItem.line_total), Decimal("0.00")).label("total_revenue"),
+                func.coalesce(func.sum(OrderItem.quantity), 0).label("total_items"),
+                func.count(distinct(Order.id)).label("total_orders"),
+            )
+            .join(Order, OrderItem.order_id == Order.id)
+            .where(
+                OrderItem.seller_id == seller_id,
+                Order.payment_status == PaymentStatus.PAID,
+                Order.status != OrderStatus.CANCELLED,
+            )
+        )
+        paid_res = await self.session.execute(paid_metrics_stmt)
+        total_revenue, total_items, total_orders = paid_res.one()
+        total_rev_dec = Decimal(str(total_revenue or "0.00"))
+        tot_orders_int = int(total_orders or 0)
+        tot_items_int = int(total_items or 0)
+
+        aov = (
+            Decimal(str(round(float(total_rev_dec) / tot_orders_int, 2)))
+            if tot_orders_int > 0
+            else Decimal("0.00")
+        )
+
+        # 3. Fulfillment status counts
+        fulfill_stmt = (
+            select(
+                func.count(
+                    case(
+                        (
+                            OrderItem.fulfillment_status.in_(
+                                [
+                                    FulfillmentStatus.PENDING,
+                                    FulfillmentStatus.CONFIRMED,
+                                    FulfillmentStatus.PROCESSING,
+                                    FulfillmentStatus.SHIPPED,
+                                ]
+                            ),
+                            1,
+                        )
+                    )
+                ).label("pending_fulfill"),
+                func.count(
+                    case((OrderItem.fulfillment_status == FulfillmentStatus.DELIVERED, 1))
+                ).label("delivered_fulfill"),
+            )
+            .join(Order, OrderItem.order_id == Order.id)
+            .where(
+                OrderItem.seller_id == seller_id,
+                Order.payment_status == PaymentStatus.PAID,
+                Order.status != OrderStatus.CANCELLED,
+            )
+        )
+        fulfill_res = await self.session.execute(fulfill_stmt)
+        pending_fulfill, delivered_fulfill = fulfill_res.one()
+
+        return SellerAnalyticsOverview(
+            total_revenue=total_rev_dec,
+            total_orders=tot_orders_int,
+            total_items_sold=tot_items_int,
+            average_order_value=aov,
+            active_products=int(active_prods or 0),
+            low_stock_products=int(low_stock_prods or 0),
+            pending_fulfillment_count=int(pending_fulfill or 0),
+            delivered_order_count=int(delivered_fulfill or 0),
+        )
+
+    async def get_sales_analytics(
+        self,
+        seller_id: uuid.UUID,
+        period: str = "daily",
+    ) -> List[SellerSalesPeriodItem]:
+        """
+        Aggregates sales over time (daily, weekly, or monthly) for paid, non-cancelled orders.
+        """
+        if period == "weekly":
+            period_expr = func.to_char(func.date_trunc("week", Order.created_at), "YYYY-\"W\"IW")
+        elif period == "monthly":
+            period_expr = func.to_char(func.date_trunc("month", Order.created_at), "YYYY-MM")
+        else:
+            period_expr = func.to_char(func.date_trunc("day", Order.created_at), "YYYY-MM-DD")
+
+        stmt = (
+            select(
+                period_expr.label("period"),
+                func.count(distinct(Order.id)).label("order_count"),
+                func.sum(OrderItem.quantity).label("item_quantity"),
+                func.sum(OrderItem.line_total).label("revenue"),
+            )
+            .join(Order, OrderItem.order_id == Order.id)
+            .where(
+                OrderItem.seller_id == seller_id,
+                Order.payment_status == PaymentStatus.PAID,
+                Order.status != OrderStatus.CANCELLED,
+            )
+            .group_by(period_expr)
+            .order_by(period_expr.asc())
+        )
+
+        res = await self.session.execute(stmt)
+        items = []
+        for row in res.all():
+            items.append(
+                SellerSalesPeriodItem(
+                    period=row.period,
+                    order_count=int(row.order_count or 0),
+                    item_quantity=int(row.item_quantity or 0),
+                    revenue=Decimal(str(row.revenue or "0.00")),
+                )
+            )
+        return items
+
+    async def get_product_analytics(
+        self,
+        seller_id: uuid.UUID,
+        limit: int = 10,
+    ) -> List[SellerProductAnalyticsItem]:
+        """
+        Returns ranking of top-selling products by revenue for the seller with ratings and review counts.
+        """
+        # Subquery for approved reviews per product
+        reviews_subq = (
+            select(
+                Review.product_id,
+                func.coalesce(func.avg(Review.rating), 0.0).label("avg_rating"),
+                func.count(Review.id).label("review_count"),
+            )
+            .where(Review.is_approved.is_(True))
+            .group_by(Review.product_id)
+            .subquery()
+        )
+
+        # Subquery for sales per product
+        sales_subq = (
+            select(
+                OrderItem.product_id,
+                func.sum(OrderItem.quantity).label("total_sold"),
+                func.sum(OrderItem.line_total).label("total_revenue"),
+            )
+            .join(Order, OrderItem.order_id == Order.id)
+            .where(
+                OrderItem.seller_id == seller_id,
+                Order.payment_status == PaymentStatus.PAID,
+                Order.status != OrderStatus.CANCELLED,
+            )
+            .group_by(OrderItem.product_id)
+            .subquery()
+        )
+
+        stmt = (
+            select(
+                Product.id.label("product_id"),
+                Product.name.label("product_name"),
+                Product.sku.label("sku"),
+                Product.stock_quantity.label("current_stock"),
+                func.coalesce(sales_subq.c.total_revenue, Decimal("0.00")).label("revenue"),
+                func.coalesce(sales_subq.c.total_sold, 0).label("quantity_sold"),
+                func.coalesce(reviews_subq.c.avg_rating, 0.0).label("avg_rating"),
+                func.coalesce(reviews_subq.c.review_count, 0).label("review_count"),
+            )
+            .outerjoin(sales_subq, Product.id == sales_subq.c.product_id)
+            .outerjoin(reviews_subq, Product.id == reviews_subq.c.product_id)
+            .where(Product.seller_id == seller_id)
+            .order_by(
+                func.coalesce(sales_subq.c.total_revenue, Decimal("0.00")).desc(),
+                func.coalesce(sales_subq.c.total_sold, 0).desc(),
+                Product.name.asc(),
+            )
+            .limit(limit)
+        )
+
+        res = await self.session.execute(stmt)
+        items = []
+        for row in res.all():
+            items.append(
+                SellerProductAnalyticsItem(
+                    product_id=row.product_id,
+                    product_name=row.product_name,
+                    sku=row.sku,
+                    revenue=Decimal(str(row.revenue or "0.00")),
+                    quantity_sold=int(row.quantity_sold or 0),
+                    current_stock=int(row.current_stock or 0),
+                    average_rating=round(float(row.avg_rating or 0.0), 2),
+                    review_count=int(row.review_count or 0),
+                )
+            )
+        return items
 

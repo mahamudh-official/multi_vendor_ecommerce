@@ -24,19 +24,39 @@ class OrdersPage extends StatefulWidget {
 
 class _OrdersPageState extends State<OrdersPage> {
   OrderStatus? _selectedStatus;
+  String _selectedSort = 'newest';
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     final authState = context.read<AuthBloc>().state;
     if (authState is Authenticated) {
-      context.read<OrderBloc>().add(const OrdersRequested());
+      _applyFilters();
     }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _applyFilters() {
+    context.read<OrderBloc>().add(
+      OrdersRequested(
+        status: _selectedStatus,
+        search: _searchController.text.trim().isNotEmpty
+            ? _searchController.text.trim()
+            : null,
+        sort: _selectedSort,
+      ),
+    );
   }
 
   void _onStatusFilterSelected(OrderStatus? status) {
     setState(() => _selectedStatus = status);
-    context.read<OrderBloc>().add(OrdersRequested(status: status));
+    _applyFilters();
   }
 
   @override
@@ -82,6 +102,65 @@ class _OrdersPageState extends State<OrdersPage> {
           appBar: AppBar(title: const Text('My Orders')),
           body: Column(
             children: [
+              // ── Search & Sort Bar ─────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.sm,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Search order number (e.g. ORD-...)',
+                          prefixIcon: const Icon(Icons.search, size: 20),
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear, size: 18),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    _applyFilters();
+                                  },
+                                )
+                              : null,
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onSubmitted: (_) => _applyFilters(),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    PopupMenuButton<String>(
+                      initialValue: _selectedSort,
+                      icon: const Icon(Icons.sort_rounded),
+                      tooltip: 'Sort Orders',
+                      onSelected: (val) {
+                        setState(() => _selectedSort = val);
+                        _applyFilters();
+                      },
+                      itemBuilder: (context) => const [
+                        PopupMenuItem(
+                          value: 'newest',
+                          child: Text('Newest First'),
+                        ),
+                        PopupMenuItem(
+                          value: 'oldest',
+                          child: Text('Oldest First'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
               // ── Status Filter Chips ──────────────────────────────────────
               SizedBox(
                 height: 48,

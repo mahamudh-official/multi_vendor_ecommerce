@@ -24,6 +24,7 @@ from app.modules.auth.schemas import (
     RefreshTokenResponse,
     RegisterRequest,
     TokenResponse,
+    UserProfileUpdate,
     UserRead,
 )
 
@@ -124,3 +125,12 @@ class AuthService:
             token_type="bearer",
             expires_in=expires_in,
         )
+
+    async def update_profile(self, user: User, request: UserProfileUpdate) -> User:
+        """Update allowed user profile fields (full_name, phone, avatar_url)."""
+        update_data = request.model_dump(exclude_unset=True)
+        # Strictly whitelist allowed fields
+        allowed_keys = {"full_name", "phone", "avatar_url"}
+        safe_data = {k: v for k, v in update_data.items() if k in allowed_keys}
+
+        return await self.repository.update(user, safe_data)

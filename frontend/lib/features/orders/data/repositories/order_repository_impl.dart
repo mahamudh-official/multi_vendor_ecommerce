@@ -37,12 +37,20 @@ class OrderRepositoryImpl implements OrderRepository {
   @override
   Future<Result<List<Order>>> getOrders({
     OrderStatus? status,
+    String? search,
+    String? sort,
+    DateTime? fromDate,
+    DateTime? toDate,
     int page = 1,
     int pageSize = 10,
   }) async {
     try {
       final orders = await remoteDataSource.getOrders(
         status: status,
+        search: search,
+        sort: sort,
+        fromDate: fromDate,
+        toDate: toDate,
         page: page,
         pageSize: pageSize,
       );

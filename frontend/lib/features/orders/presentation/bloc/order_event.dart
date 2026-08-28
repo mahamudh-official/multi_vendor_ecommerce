@@ -21,21 +21,41 @@ final class CheckoutSubmitted extends OrderEvent {
 }
 
 final class OrdersRequested extends OrderEvent {
-  const OrdersRequested({this.status});
+  const OrdersRequested({
+    this.status,
+    this.search,
+    this.sort,
+    this.fromDate,
+    this.toDate,
+  });
 
   final OrderStatus? status;
+  final String? search;
+  final String? sort;
+  final DateTime? fromDate;
+  final DateTime? toDate;
 
   @override
-  List<Object?> get props => [status];
+  List<Object?> get props => [status, search, sort, fromDate, toDate];
 }
 
 final class OrdersRefreshed extends OrderEvent {
-  const OrdersRefreshed({this.status});
+  const OrdersRefreshed({
+    this.status,
+    this.search,
+    this.sort,
+    this.fromDate,
+    this.toDate,
+  });
 
   final OrderStatus? status;
+  final String? search;
+  final String? sort;
+  final DateTime? fromDate;
+  final DateTime? toDate;
 
   @override
-  List<Object?> get props => [status];
+  List<Object?> get props => [status, search, sort, fromDate, toDate];
 }
 
 final class OrderDetailsRequested extends OrderEvent {

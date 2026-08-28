@@ -10,7 +10,19 @@ class GetOrdersUseCase {
 
   Future<Result<List<Order>>> call({
     OrderStatus? status,
+    String? search,
+    String? sort,
+    DateTime? fromDate,
+    DateTime? toDate,
     int page = 1,
     int pageSize = 10,
-  }) => _repository.getOrders(status: status, page: page, pageSize: pageSize);
+  }) => _repository.getOrders(
+    status: status,
+    search: search,
+    sort: sort,
+    fromDate: fromDate,
+    toDate: toDate,
+    page: page,
+    pageSize: pageSize,
+  );
 }

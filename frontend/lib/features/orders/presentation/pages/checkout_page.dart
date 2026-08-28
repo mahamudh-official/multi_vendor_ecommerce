@@ -8,6 +8,10 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/product_image_placeholder.dart';
+import '../../../addresses/domain/entities/address.dart';
+import '../../../addresses/presentation/bloc/address_bloc.dart';
+import '../../../addresses/presentation/bloc/address_event.dart';
+import '../../../addresses/presentation/widgets/saved_address_selector.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../cart/presentation/bloc/cart_bloc.dart';
@@ -39,6 +43,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final _countryController = TextEditingController(text: 'USA');
   final _noteController = TextEditingController();
 
+  Address? _selectedSavedAddress;
   bool _isSubmitting = false;
 
   @override
@@ -48,6 +53,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
     if (authState is Authenticated) {
       _fullNameController.text = authState.user.fullName;
     }
+    context.read<AddressBloc>().add(const LoadAddressesEvent());
+  }
+
+  void _applySavedAddress(Address addr) {
+    setState(() {
+      _selectedSavedAddress = addr;
+      _fullNameController.text = addr.fullName;
+      _phoneController.text = addr.phone;
+      _address1Controller.text = addr.addressLine1;
+      _address2Controller.text = addr.addressLine2 ?? '';
+      _cityController.text = addr.city;
+      _stateController.text = addr.state;
+      _postalCodeController.text = addr.postalCode;
+      _countryController.text = addr.country;
+    });
   }
 
   @override
@@ -192,6 +212,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       icon: Icons.local_shipping_outlined,
                       child: Column(
                         children: [
+                          SavedAddressSelector(
+                            selectedAddress: _selectedSavedAddress,
+                            onAddressSelected: _applySavedAddress,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
                           TextFormField(
                             controller: _fullNameController,
                             decoration: const InputDecoration(

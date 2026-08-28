@@ -85,6 +85,21 @@ import '../../features/reviews/domain/repositories/review_repository.dart';
 import '../../features/reviews/domain/usecases/review_usecases.dart';
 import '../../features/reviews/presentation/bloc/my_reviews_bloc.dart';
 import '../../features/reviews/presentation/bloc/review_bloc.dart';
+import '../../features/profile/data/datasources/profile_remote_datasource.dart';
+import '../../features/profile/data/repositories/profile_repository_impl.dart';
+import '../../features/profile/domain/repositories/profile_repository.dart';
+import '../../features/profile/domain/usecases/profile_usecases.dart';
+import '../../features/profile/presentation/bloc/profile_bloc.dart';
+import '../../features/addresses/data/datasources/address_remote_datasource.dart';
+import '../../features/addresses/data/repositories/address_repository_impl.dart';
+import '../../features/addresses/domain/repositories/address_repository.dart';
+import '../../features/addresses/domain/usecases/address_usecases.dart';
+import '../../features/addresses/presentation/bloc/address_bloc.dart';
+import '../../features/seller_analytics/data/datasources/seller_analytics_remote_datasource.dart';
+import '../../features/seller_analytics/data/repositories/seller_analytics_repository_impl.dart';
+import '../../features/seller_analytics/domain/repositories/seller_analytics_repository.dart';
+import '../../features/seller_analytics/domain/usecases/seller_analytics_usecases.dart';
+import '../../features/seller_analytics/presentation/bloc/seller_analytics_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -575,6 +590,89 @@ Future<void> configureDependencies() async {
     () => MyReviewsBloc(
       getMyReviewsUseCase: getIt<GetMyReviewsUseCase>(),
       deleteReviewUseCase: getIt<DeleteReviewUseCase>(),
+    ),
+  );
+
+  // ── Step 10: Profile, Addresses & Seller Analytics ─────────────────────────
+  // Profile
+  getIt.registerLazySingleton<ProfileRemoteDataSource>(
+    () => ProfileRemoteDataSourceImpl(dioClient: getIt<DioClient>()),
+  );
+  getIt.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepositoryImpl(
+      remoteDataSource: getIt<ProfileRemoteDataSource>(),
+    ),
+  );
+  getIt.registerLazySingleton<GetProfileUseCase>(
+    () => GetProfileUseCase(getIt<ProfileRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateProfileUseCase>(
+    () => UpdateProfileUseCase(getIt<ProfileRepository>()),
+  );
+  getIt.registerFactory<ProfileBloc>(
+    () => ProfileBloc(
+      getProfileUseCase: getIt<GetProfileUseCase>(),
+      updateProfileUseCase: getIt<UpdateProfileUseCase>(),
+    ),
+  );
+
+  // Addresses
+  getIt.registerLazySingleton<AddressRemoteDataSource>(
+    () => AddressRemoteDataSourceImpl(dioClient: getIt<DioClient>()),
+  );
+  getIt.registerLazySingleton<AddressRepository>(
+    () => AddressRepositoryImpl(
+      remoteDataSource: getIt<AddressRemoteDataSource>(),
+    ),
+  );
+  getIt.registerLazySingleton<GetAddressesUseCase>(
+    () => GetAddressesUseCase(getIt<AddressRepository>()),
+  );
+  getIt.registerLazySingleton<CreateAddressUseCase>(
+    () => CreateAddressUseCase(getIt<AddressRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateAddressUseCase>(
+    () => UpdateAddressUseCase(getIt<AddressRepository>()),
+  );
+  getIt.registerLazySingleton<DeleteAddressUseCase>(
+    () => DeleteAddressUseCase(getIt<AddressRepository>()),
+  );
+  getIt.registerLazySingleton<SetDefaultAddressUseCase>(
+    () => SetDefaultAddressUseCase(getIt<AddressRepository>()),
+  );
+  getIt.registerFactory<AddressBloc>(
+    () => AddressBloc(
+      getAddressesUseCase: getIt<GetAddressesUseCase>(),
+      createAddressUseCase: getIt<CreateAddressUseCase>(),
+      updateAddressUseCase: getIt<UpdateAddressUseCase>(),
+      deleteAddressUseCase: getIt<DeleteAddressUseCase>(),
+      setDefaultAddressUseCase: getIt<SetDefaultAddressUseCase>(),
+    ),
+  );
+
+  // Seller Analytics
+  getIt.registerLazySingleton<SellerAnalyticsRemoteDataSource>(
+    () => SellerAnalyticsRemoteDataSourceImpl(dioClient: getIt<DioClient>()),
+  );
+  getIt.registerLazySingleton<SellerAnalyticsRepository>(
+    () => SellerAnalyticsRepositoryImpl(
+      remoteDataSource: getIt<SellerAnalyticsRemoteDataSource>(),
+    ),
+  );
+  getIt.registerLazySingleton<GetSellerAnalyticsOverviewUseCase>(
+    () => GetSellerAnalyticsOverviewUseCase(getIt<SellerAnalyticsRepository>()),
+  );
+  getIt.registerLazySingleton<GetSellerSalesAnalyticsUseCase>(
+    () => GetSellerSalesAnalyticsUseCase(getIt<SellerAnalyticsRepository>()),
+  );
+  getIt.registerLazySingleton<GetSellerProductAnalyticsUseCase>(
+    () => GetSellerProductAnalyticsUseCase(getIt<SellerAnalyticsRepository>()),
+  );
+  getIt.registerFactory<SellerAnalyticsBloc>(
+    () => SellerAnalyticsBloc(
+      getOverviewUseCase: getIt<GetSellerAnalyticsOverviewUseCase>(),
+      getSalesAnalyticsUseCase: getIt<GetSellerSalesAnalyticsUseCase>(),
+      getProductAnalyticsUseCase: getIt<GetSellerProductAnalyticsUseCase>(),
     ),
   );
 }

@@ -15,16 +15,19 @@ from app.modules.products.repository import CategoryRepository
 from app.modules.seller.constants import DEFAULT_LOW_STOCK_THRESHOLD
 from app.modules.seller.repository import SellerRepository
 from app.modules.seller.schemas import (
+    SellerAnalyticsOverview,
     SellerDashboardResponse,
     SellerOrderDetailRead,
     SellerOrderItemRead,
     SellerOrderListItemRead,
     SellerOrderListResponse,
     SellerOrderStatusUpdateResponse,
+    SellerProductAnalyticsResponse,
     SellerProductCreate,
     SellerProductListResponse,
     SellerProductRead,
     SellerProductUpdate,
+    SellerSalesAnalyticsResponse,
 )
 
 
@@ -101,6 +104,52 @@ class SellerService:
             recent_orders=recent_orders,
             low_stock_products=low_stock_products,
         )
+
+    # ── Analytics ───────────────────────────────────────────────────────────
+
+    async def get_analytics_overview(
+        self,
+        seller: User,
+        low_stock_threshold: int = DEFAULT_LOW_STOCK_THRESHOLD,
+    ) -> SellerAnalyticsOverview:
+        """Fetch high-level seller revenue, order volume, and fulfillment KPIs."""
+        return await self.seller_repo.get_analytics_overview(
+            seller_id=seller.id,
+            low_stock_threshold=low_stock_threshold,
+        )
+
+    async def get_sales_analytics(
+        self,
+        seller: User,
+        period: str = "daily",
+    ) -> SellerSalesAnalyticsResponse:
+        """Fetch timeline sales aggregation for the seller."""
+        normalized_period = period.lower().strip()
+        if normalized_period not in ("daily", "weekly", "monthly"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid period. Must be one of: 'daily', 'weekly', 'monthly'.",
+            )
+        items = await self.seller_repo.get_sales_analytics(
+            seller_id=seller.id,
+            period=normalized_period,
+        )
+        return SellerSalesAnalyticsResponse(
+            period_type=normalized_period,
+            items=items,
+        )
+
+    async def get_product_analytics(
+        self,
+        seller: User,
+        limit: int = 10,
+    ) -> SellerProductAnalyticsResponse:
+        """Fetch top-selling product ranking by revenue and units for the seller."""
+        items = await self.seller_repo.get_product_analytics(
+            seller_id=seller.id,
+            limit=limit,
+        )
+        return SellerProductAnalyticsResponse(items=items)
 
     # ── Seller Products ─────────────────────────────────────────────────────
 

@@ -19,6 +19,9 @@ import '../features/admin/presentation/bloc/admin_blocs.dart';
 import '../features/search/presentation/bloc/product_search_bloc.dart';
 import '../features/reviews/presentation/bloc/my_reviews_bloc.dart';
 import '../features/reviews/presentation/bloc/review_bloc.dart';
+import '../features/profile/presentation/bloc/profile_bloc.dart';
+import '../features/addresses/presentation/bloc/address_bloc.dart';
+import '../features/seller_analytics/presentation/bloc/seller_analytics_bloc.dart';
 import '../features/seller/presentation/bloc/seller_dashboard/seller_dashboard_bloc.dart';
 import '../features/seller/presentation/bloc/seller_orders/seller_orders_bloc.dart';
 import '../features/seller/presentation/bloc/seller_products/seller_products_bloc.dart';
@@ -85,6 +88,11 @@ class MarketoApp extends StatelessWidget {
         ),
         BlocProvider<AdminAuditLogsBloc>(
           create: (_) => getIt<AdminAuditLogsBloc>(),
+        ),
+        BlocProvider<ProfileBloc>(create: (_) => getIt<ProfileBloc>()),
+        BlocProvider<AddressBloc>(create: (_) => getIt<AddressBloc>()),
+        BlocProvider<SellerAnalyticsBloc>(
+          create: (_) => getIt<SellerAnalyticsBloc>(),
         ),
       ],
       child: BlocListener<AuthBloc, AuthState>(

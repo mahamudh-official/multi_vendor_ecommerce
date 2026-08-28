@@ -3,7 +3,7 @@ Auth Pydantic v2 schemas for authentication endpoints.
 """
 import uuid
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
@@ -74,11 +74,41 @@ class UserRead(UserBase):
     """Safe user representation returned to clients."""
     id: uuid.UUID
     role: UserRole
+    phone: Optional[str] = None
+    avatar_url: Optional[str] = None
+    seller_status: Optional[str] = None
     is_active: bool
     created_at: datetime
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UserProfileUpdate(BaseModel):
+    """Safe profile update payload for authenticated users."""
+    model_config = ConfigDict(extra="forbid")
+
+    full_name: Optional[str] = Field(None, min_length=2, max_length=255)
+    phone: Optional[str] = Field(None, min_length=5, max_length=32)
+    avatar_url: Optional[str] = Field(None, max_length=1024)
+
+    @field_validator("full_name", mode="after")
+    @classmethod
+    def clean_name(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None:
+            s = v.strip()
+            if len(s) < 2:
+                raise ValueError("Full name must be at least 2 characters long")
+            return s
+        return None
+
+    @field_validator("phone", mode="after")
+    @classmethod
+    def clean_phone(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None:
+            s = v.strip()
+            return s if s else None
+        return None
 
 
 class TokenResponse(BaseModel):

@@ -7,19 +7,65 @@ from app.modules.auth.models import User
 from app.modules.orders.models import OrderStatus
 from app.modules.seller.dependencies import get_seller_service, require_seller_role
 from app.modules.seller.schemas import (
+    SellerAnalyticsOverview,
     SellerDashboardResponse,
     SellerOrderDetailRead,
     SellerOrderListResponse,
     SellerOrderStatusUpdateRequest,
     SellerOrderStatusUpdateResponse,
+    SellerProductAnalyticsResponse,
     SellerProductCreate,
     SellerProductListResponse,
     SellerProductRead,
     SellerProductUpdate,
+    SellerSalesAnalyticsResponse,
 )
 from app.modules.seller.service import SellerService
 
 seller_router = APIRouter(prefix="/seller", tags=["Seller Dashboard & Orders"])
+
+
+# ── Detailed Analytics ──────────────────────────────────────────────────────
+
+@seller_router.get(
+    "/analytics/overview",
+    response_model=SellerAnalyticsOverview,
+    status_code=status.HTTP_200_OK,
+    summary="Get detailed seller analytics overview KPIs",
+)
+async def get_seller_analytics_overview(
+    current_seller: Annotated[User, Depends(require_seller_role)],
+    service: Annotated[SellerService, Depends(get_seller_service)],
+) -> SellerAnalyticsOverview:
+    return await service.get_analytics_overview(seller=current_seller)
+
+
+@seller_router.get(
+    "/analytics/sales",
+    response_model=SellerSalesAnalyticsResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get seller sales aggregation over time (daily, weekly, monthly)",
+)
+async def get_seller_sales_analytics(
+    current_seller: Annotated[User, Depends(require_seller_role)],
+    service: Annotated[SellerService, Depends(get_seller_service)],
+    period: str = Query("daily", description="Aggregation period: daily, weekly, monthly"),
+) -> SellerSalesAnalyticsResponse:
+    return await service.get_sales_analytics(seller=current_seller, period=period)
+
+
+@seller_router.get(
+    "/analytics/products",
+    response_model=SellerProductAnalyticsResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get seller top-selling products analytics",
+)
+async def get_seller_product_analytics(
+    current_seller: Annotated[User, Depends(require_seller_role)],
+    service: Annotated[SellerService, Depends(get_seller_service)],
+    limit: int = Query(10, ge=1, le=50, description="Max products to return"),
+) -> SellerProductAnalyticsResponse:
+    return await service.get_product_analytics(seller=current_seller, limit=limit)
 
 
 # ── Dashboard ───────────────────────────────────────────────────────────────

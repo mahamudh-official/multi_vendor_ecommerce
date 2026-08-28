@@ -1,5 +1,6 @@
 import math
 import uuid
+from datetime import datetime
 from typing import List, Optional, Tuple
 
 from sqlalchemy import func, select, update
@@ -56,6 +57,10 @@ class OrderRepository:
         self,
         user_id: uuid.UUID,
         status: Optional[OrderStatus] = None,
+        from_date: Optional[datetime] = None,
+        to_date: Optional[datetime] = None,
+        search: Optional[str] = None,
+        sort: str = "newest",
         page: int = 1,
         page_size: int = 10,
     ) -> Tuple[List[Order], int, int]:
@@ -66,15 +71,32 @@ class OrderRepository:
             query = query.where(Order.status == status)
             count_query = count_query.where(Order.status == status)
 
+        if from_date is not None:
+            query = query.where(Order.created_at >= from_date)
+            count_query = count_query.where(Order.created_at >= from_date)
+
+        if to_date is not None:
+            query = query.where(Order.created_at <= to_date)
+            count_query = count_query.where(Order.created_at <= to_date)
+
+        if search:
+            search_clean = f"%{search.strip()}%"
+            query = query.where(Order.order_number.ilike(search_clean))
+            count_query = count_query.where(Order.order_number.ilike(search_clean))
+
         total_res = await self.session.execute(count_query)
         total = total_res.scalar_one() or 0
 
-        pages = max(1, math.ceil(total / page_size))
+        pages = max(1, math.ceil(total / page_size)) if total > 0 else 0
         offset = (page - 1) * page_size
+
+        if sort == "oldest":
+            query = query.order_by(Order.created_at.asc())
+        else:
+            query = query.order_by(Order.created_at.desc())
 
         query = (
             query.options(selectinload(Order.items))
-            .order_by(Order.created_at.desc())
             .offset(offset)
             .limit(page_size)
         )
