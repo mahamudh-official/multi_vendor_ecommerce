@@ -6,6 +6,8 @@ from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Query, status
 
+from app.core.config import get_settings
+from app.core.rate_limiter import rate_limit
 from app.modules.auth.dependencies import get_current_active_user
 from app.modules.auth.models import User
 from app.modules.auth.schemas import MessageResponse
@@ -18,7 +20,8 @@ from app.modules.reviews.schemas import (
 )
 from app.modules.reviews.service import ReviewService
 
-reviews_router = APIRouter(tags=["Reviews & Ratings"])
+settings = get_settings()
+reviews_router = APIRouter(tags=["Reviews"])
 
 
 @reviews_router.post(
@@ -26,6 +29,7 @@ reviews_router = APIRouter(tags=["Reviews & Ratings"])
     response_model=ReviewRead,
     status_code=status.HTTP_201_CREATED,
     summary="Create a verified purchase review for a product",
+    dependencies=[Depends(rate_limit(max_requests=settings.rate_limit_reviews_per_minute, window_seconds=60, key_prefix="reviews_create"))],
 )
 async def create_product_review(
     product_id: uuid.UUID,

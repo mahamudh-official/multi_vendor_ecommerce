@@ -3,6 +3,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
+from app.core.config import get_settings
+from app.core.rate_limiter import rate_limit
 from app.modules.auth.dependencies import get_current_active_user
 from app.modules.auth.models import User
 from app.modules.payments.dependencies import get_payment_service
@@ -14,6 +16,7 @@ from app.modules.payments.schemas import (
 )
 from app.modules.payments.service import PaymentService
 
+settings = get_settings()
 payments_router = APIRouter(prefix="/payments", tags=["Payments"])
 
 
@@ -22,6 +25,7 @@ payments_router = APIRouter(prefix="/payments", tags=["Payments"])
     response_model=PaymentCreateResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create or initialize payment for an order",
+    dependencies=[Depends(rate_limit(max_requests=settings.rate_limit_payments_per_minute, window_seconds=60, key_prefix="payments_create"))],
 )
 async def create_payment_intent(
     order_id: uuid.UUID,
@@ -39,6 +43,7 @@ async def create_payment_intent(
     response_model=PaymentProcessResponse,
     status_code=status.HTTP_200_OK,
     summary="Process and confirm payment (idempotent)",
+    dependencies=[Depends(rate_limit(max_requests=settings.rate_limit_payments_per_minute, window_seconds=60, key_prefix="payments_process"))],
 )
 async def process_payment(
     payment_id: uuid.UUID,

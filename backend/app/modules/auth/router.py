@@ -5,6 +5,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
+from app.core.config import get_settings
+from app.core.rate_limiter import rate_limit
 from app.modules.auth.dependencies import (
     get_auth_service,
     get_current_active_user,
@@ -22,7 +24,8 @@ from app.modules.auth.schemas import (
 )
 from app.modules.auth.service import AuthService
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+settings = get_settings()
+router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 @router.post(
@@ -30,6 +33,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
     response_model=UserRead,
     status_code=status.HTTP_201_CREATED,
     summary="Register a new customer or seller account",
+    dependencies=[Depends(rate_limit(max_requests=settings.rate_limit_auth_per_minute, window_seconds=60, key_prefix="auth_register"))],
 )
 async def register(
     request: RegisterRequest,
@@ -50,6 +54,7 @@ async def register(
     response_model=TokenResponse,
     status_code=status.HTTP_200_OK,
     summary="Log in and retrieve access/refresh tokens",
+    dependencies=[Depends(rate_limit(max_requests=settings.rate_limit_auth_per_minute, window_seconds=60, key_prefix="auth_login"))],
 )
 async def login(
     request: LoginRequest,
