@@ -15,9 +15,12 @@ The Multi-Vendor Marketplace is structured as a scalable, modern micro-monolith 
 │                         FastAPI Backend Layer                          │
 │                                                                        │
 │   ┌────────────────────────────────────────────────────────────────┐   │
-│   │ Middleware: Correlation ID, CORS, In-Memory Rate Limiting      │   │
+│   │ Middleware: Correlation ID, CORS, Security Headers             │   │
 │   └────────────────────────────────┬───────────────────────────────┘   │
 │                                    ▼                                   │
+│   ┌────────────────────────────────────────────────────────────────┐   │
+│   │ Rate Limiting: Redis Sliding Window Lua script (Fallback: Mem) │   │
+│   └────────────────────────────────┬───────────────────────────────┘   │
 │   ┌────────────────────────────────────────────────────────────────┐   │
 │   │ Routers: Auth, Profile, Addresses, Products, Orders, etc.      │   │
 │   └────────────────────────────────┬───────────────────────────────┘   │
@@ -58,12 +61,17 @@ The Multi-Vendor Marketplace is structured as a scalable, modern micro-monolith 
 - **Zero Trust on Client Financial Inputs**:
   - The client NEVER passes total amounts, unit prices, discounts, or commission rates during checkout or payment creation.
   - All financial calculations are derived directly from database product prices and recorded in immutable snapshots.
-- **Role-Based Access Control (RBAC)**:
+- **Role-Based Access Control (RBAC) & Vendor Suspension**:
   - Three distinct roles: `customer`, `seller`, `admin`.
   - Enforced via FastAPI dependency injection guards: `get_current_active_user`, `require_seller_role`, `require_admin_role`.
+  - Mutation endpoints on seller resources additionally require `require_approved_seller` check to block suspended or onboarding vendors.
 - **Multi-Vendor Isolation**:
   - Sellers can only view, modify, and fulfill `OrderItems` matching their own `seller_id`.
   - Customers can only access their own orders, cart items, addresses, and wishlist entries.
+- **Payment Gateway Abstraction**:
+  - Seamlessly integrates either `MockPaymentProvider` or `StripeProvider` based on environment configurations, executing non-blocking asynchronous calls alongside signature-verified, idempotent webhook transaction captures.
+- **Review Integrity Guard**:
+  - Database-level unique constraints on `reviews(user_id, order_item_id)` block review flooding and rating spamming.
 
 ---
 

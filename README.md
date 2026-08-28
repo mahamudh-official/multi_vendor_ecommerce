@@ -151,6 +151,8 @@ python backend/verify_step11.py
 - [REST API Reference](docs/API.md)
 - [Production Deployment & Backups](docs/DEPLOYMENT.md)
 - [Security Model & Threat Mitigations](docs/SECURITY.md)
+- [Advanced Production & Portfolio Polish](docs/portfolio_polish.md)
+- [Production Release & Migration Logs](docs/RELEASE.md)
 - [Project Capabilities Scorecard](docs/PROJECT_STATUS.md)
 
 ---

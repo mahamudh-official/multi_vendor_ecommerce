@@ -372,3 +372,36 @@ async def test_seller_dashboard_metrics_aggregation(client: AsyncClient, seller_
     assert "recent_orders" in data
     assert "low_stock_products" in data
 
+
+@pytest.mark.asyncio
+async def test_suspended_seller_cannot_mutate_resources(
+    client: AsyncClient,
+    seller_setup: dict,
+):
+    """Verify that suspended or pending sellers cannot create/update products or mutate order fulfillments."""
+    seller_user_id = seller_setup["seller_id"]
+    seller_auth = {"Authorization": f"Bearer {seller_setup['seller_token']}"}
+    admin_auth = {"Authorization": f"Bearer {seller_setup['admin_token']}"}
+    category_id = seller_setup["category_id"]
+
+    # 1. Admin suspends seller
+    r_susp = await client.patch(
+        f"/api/v1/admin/sellers/{seller_user_id}/status",
+        json={"status": "suspended"},
+        headers=admin_auth,
+    )
+    assert r_susp.status_code == 200
+
+    # 2. Suspended seller attempts to create product -> 403 Forbidden
+    r_prod = await client.post(
+        "/api/v1/seller/products",
+        json={
+            "name": "Suspended Product",
+            "price": "99.99",
+            "stock_quantity": 10,
+            "category_id": category_id,
+            "sku": "SUSP-01",
+        },
+        headers=seller_auth,
+    )
+    a

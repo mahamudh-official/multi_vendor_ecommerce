@@ -275,3 +275,92 @@ class PaymentService:
 
         return PaymentRead.model_validate(payment)
 
+    async def handle_stripe_webhook(
+        self,
+        payload: bytes,
+        sig_header: str,
+        webhook_secret: str,
+    ) -> dict:
+        """
+        Verifies Stripe webhook signature and updates Payment + Order states atomically.
+        Enforces idempotency to ensure event handlers don't repeat processes.
+        """
+        import stripe
+        try:
+            event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
+        except ValueError:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid payload.")
+        except stripe.error.SignatureVerificationError as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Signature verification failed: {e}")
+
+        event_type = event["type"]
+        data_object = event["data"]["object"]
+
+        payment_intent_id = data_object.get("id")
+        if not payment_intent_id:
+            return {"status": "ignored", "reason": "No payment intent ID"}
+
+        logger.info(
+            "Received Stripe Webhook event=%s payment_intent_id=%s status=%s",
+            event_type,
+            payment_intent_id,
+            data_object.get("status"),
+        )
+
+        if event_type in ("payment_intent.succeeded", "payment_intent.payment_failed"):
+            payment = await self.payment_repo.get_by_provider_payment_id(payment_intent_id)
+            if not payment:
+                return {"status": "ignored", "reason": f"Payment record not found for provider_payment_id: {payment_intent_id}"}
+
+            order = await self.order_repo.get_by_id(payment.order_id)
+            if not order:
+                return {"status": "ignored", "reason": "Order record not found"}
+
+            if event_type == "payment_intent.succeeded":
+                if payment.status == PaymentStatus.SUCCEEDED and order.payment_status == OrderPaymentStatus.PAID:
+                    return {"status": "success", "message": "Idempotent: payment was already succeeded"}
+
+                payment.status = PaymentStatus.SUCCEEDED
+                order.payment_status = OrderPaymentStatus.PAID
+                await self.session.flush()
+
+                await self.notification_service.send_notification(
+                    user_id=order.user_id,
+                    type=NotificationType.PAYMENT_SUCCEEDED,
+                    title="Payment Successful",
+                    message=f"Your payment of ${payment.amount:.2f} for Order #{order.order_number} was successfully processed.",
+                    data={
+                        "order_id": str(order.id),
+                        "order_number": order.order_number,
+                        "payment_id": str(payment.id),
+                        "amount": str(payment.amount),
+                    },
+                )
+
+            elif event_type == "payment_intent.payment_failed":
+                if payment.status == PaymentStatus.FAILED and order.payment_status == OrderPaymentStatus.FAILED:
+                    return {"status": "success", "message": "Idempotent: payment was already failed"}
+
+                payment.status = PaymentStatus.FAILED
+                order.payment_status = OrderPaymentStatus.FAILED
+                await self.session.flush()
+
+                error_msg = data_object.get("last_payment_error", {}).get("message", "Payment failed.")
+                await self.notification_service.send_notification(
+                    user_id=order.user_id,
+                    type=NotificationType.PAYMENT_FAILED,
+                    title="Payment Failed",
+                    message=f"Payment of ${payment.amount:.2f} for Order #{order.order_number} failed. {error_msg}",
+                    data={
+                        "order_id": str(order.id),
+                        "order_number": order.order_number,
+                        "payment_id": str(payment.id),
+                        "error": error_msg,
+                    },
+                )
+
+            await self.session.commit()
+            return {"status": "success", "event": event_type}
+
+        return {"status": "ignored", "reason": f"Unhandled event type: {event_type}"}
+

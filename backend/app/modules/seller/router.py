@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Query, status
 
 from app.modules.auth.models import User
 from app.modules.orders.models import OrderStatus
-from app.modules.seller.dependencies import get_seller_service, require_seller_role
+from app.modules.seller.dependencies import get_seller_service, require_approved_seller, require_seller_role
 from app.modules.seller.schemas import (
     SellerAnalyticsOverview,
     SellerDashboardResponse,
@@ -122,7 +122,7 @@ async def list_seller_products(
 )
 async def create_seller_product(
     data: SellerProductCreate,
-    current_seller: Annotated[User, Depends(require_seller_role)],
+    current_seller: Annotated[User, Depends(require_approved_seller)],
     service: Annotated[SellerService, Depends(get_seller_service)],
 ) -> SellerProductRead:
     return await service.create_product(seller=current_seller, data=data)
@@ -157,7 +157,7 @@ async def get_seller_product(
 async def update_seller_product(
     product_id: uuid.UUID,
     data: SellerProductUpdate,
-    current_seller: Annotated[User, Depends(require_seller_role)],
+    current_seller: Annotated[User, Depends(require_approved_seller)],
     service: Annotated[SellerService, Depends(get_seller_service)],
 ) -> SellerProductRead:
     return await service.update_product(
@@ -174,7 +174,7 @@ async def update_seller_product(
 )
 async def deactivate_seller_product(
     product_id: uuid.UUID,
-    current_seller: Annotated[User, Depends(require_seller_role)],
+    current_seller: Annotated[User, Depends(require_approved_seller)],
     service: Annotated[SellerService, Depends(get_seller_service)],
 ) -> None:
     await service.deactivate_product(seller=current_seller, product_id=product_id)
@@ -231,7 +231,7 @@ async def get_seller_order_details(
 async def update_seller_order_status(
     order_id: uuid.UUID,
     data: SellerOrderStatusUpdateRequest,
-    current_seller: Annotated[User, Depends(require_seller_role)],
+    current_seller: Annotated[User, Depends(require_approved_seller)],
     service: Annotated[SellerService, Depends(get_seller_service)],
 ) -> SellerOrderStatusUpdateResponse:
     return await service.update_order_fulfillment_status(

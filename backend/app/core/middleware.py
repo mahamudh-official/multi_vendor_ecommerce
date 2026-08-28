@@ -62,7 +62,18 @@ class RequestCorrelationMiddleware(BaseHTTPMiddleware):
             client_ip,
         )
 
-        # 5. Attach X-Request-ID header to response
+        # 5. Attach X-Request-ID and security headers to response
         response.headers["X-Request-ID"] = req_id
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none';"
+        response.headers["X-XSS-Protection"] = "0"
+
+        from app.core.config import get_settings
+        settings = get_settings()
+        if not settings.is_development or request.url.scheme == "https":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
         return response
 

@@ -14,8 +14,14 @@ from app.modules.payments.repository import PaymentRepository
 from app.modules.payments.service import PaymentService
 
 
+from app.core.config import get_settings
+from app.modules.payments.providers.stripe_provider import StripeProvider
+
 def get_payment_provider() -> PaymentProvider:
-    """Returns the configured PaymentProvider instance (Mock for Step 7)."""
+    """Returns the configured PaymentProvider instance."""
+    settings = get_settings()
+    if settings.stripe_secret_key:
+        return StripeProvider()
     return MockPaymentProvider()
 
 

@@ -379,3 +379,33 @@ async def test_admin_review_moderation(
     res_pub = await client.get(f"/api/v1/products/{p1_id}/reviews")
     assert res_pub.status_code == 200
     assert not any(r["id"] == review_id for r in res_pub.json()["items"])
+
+
+@pytest.mark.asyncio
+async def test_review_uniqueness_database_constraint(search_and_review_setup):
+    """Verify that database throws IntegrityError / unique constraint violation on duplicate (user_id, order_item_id)."""
+    import uuid
+    from sqlalchemy.exc import IntegrityError
+    from app.core.database import AsyncSessionLocal
+    from app.modules.reviews.models import Review
+
+    user_id = uuid.UUID(search_and_review_setup["customer_id"])
+    product_id = search_and_review_setup["product1_id"]
+    order_item_id = search_and_review_setup["order_item_id"]
+
+    async with AsyncSessionLocal() as session:
+        # Create first review record
+        r1 = Review(
+            user_id=user_id,
+            product_id=product_id,
+            order_item_id=order_item_id,
+            rating=5,
+            title="First Review",
+            comment="Great product",
+            is_verified_purchase=True,
+            is_approved=True,
+        )
+        session.add(r1)
+        try:
+            await session.commit()
+        except I

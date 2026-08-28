@@ -39,6 +39,10 @@ import '../../features/addresses/domain/entities/address.dart';
 import '../../features/addresses/presentation/pages/address_list_page.dart';
 import '../../features/addresses/presentation/pages/add_edit_address_page.dart';
 import '../../features/seller_analytics/presentation/pages/seller_analytics_page.dart';
+import 'dart:async';
+import '../di/injection_container.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/auth/presentation/bloc/auth_state.dart';
 
 /// Application route constants.
 abstract final class AppRoutes {
@@ -96,10 +100,85 @@ abstract final class AppRoutes {
   static const String adminAuditLogs = '/admin/audit-logs';
 }
 
+class RouterNotifier extends ChangeNotifier {
+  final AuthBloc _authBloc;
+  StreamSubscription<AuthState>? _subscription;
+
+  RouterNotifier(this._authBloc) {
+    _subscription = _authBloc.stream.listen((state) {
+      notifyListeners();
+    });
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
+}
+
 /// Application router configuration using go_router.
 final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.splash,
   debugLogDiagnostics: false,
+  refreshListenable: RouterNotifier(getIt<AuthBloc>()),
+  redirect: (context, state) {
+    final authState = getIt<AuthBloc>().state;
+    final loc = state.matchedLocation;
+
+    final isAuthenticated = authState is Authenticated;
+
+    final isAuthRoute = loc == AppRoutes.login || loc == AppRoutes.register;
+    final isSplashRoute = loc == AppRoutes.splash;
+    final isWelcomeRoute = loc == AppRoutes.welcome;
+
+    final isPublicRoute =
+        isSplashRoute ||
+        isWelcomeRoute ||
+        isAuthRoute ||
+        loc == AppRoutes.home ||
+        loc == AppRoutes.search ||
+        loc.startsWith('/products/');
+
+    final isSellerRoute = loc.startsWith('/seller');
+    final isAdminRoute = loc.startsWith('/admin');
+
+    if (authState is AuthInitial || authState is AuthLoading) {
+      return null;
+    }
+
+    if (!isAuthenticated && !isPublicRoute) {
+      return AppRoutes.login;
+    }
+
+    if (isAuthenticated) {
+      final user = authState.user;
+
+      if (isAuthRoute || isSplashRoute) {
+        return AppRoutes.home;
+      }
+
+      if (user.isCustomer) {
+        if (isSellerRoute || isAdminRoute) {
+          return AppRoutes.home;
+        }
+      }
+
+      if (user.isSeller) {
+        if (isAdminRoute) {
+          return AppRoutes.home;
+        }
+      }
+
+      if (user.isAdmin) {
+        if (isSellerRoute) {
+          return AppRoutes.home;
+        }
+      }
+    }
+
+    return null;
+  },
   routes: [
     // ── Splash ──────────────────────────────────────────────────────────
     GoRoute(

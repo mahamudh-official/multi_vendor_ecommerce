@@ -104,6 +104,34 @@ def rate_limit(
         client_ip = request.client.host if request.client else "unknown"
         # Combine IP, prefix, and path for route-specific isolation
         key = f"{key_prefix}:{request.url.path}:{client_ip}"
+
+        from app.core.rate_limiter_redis import get_redis_rate_limiter
+        redis_limiter = get_redis_rate_limiter()
+
+        if redis_limiter:
+            try:
+                await redis_limiter.check_rate_limit(
+                    key=key,
+                    max_requests=max_requests,
+                    window_seconds=window_seconds,
+                )
+                return
+            except Exception as e:
+                if isinstance(e, HTTPException):
+                    raise e
+                # Fail open to in-memory fallback only in local development
+                if settings.environment.lower() == "development":
+                    import logging
+                    logging.getLogger("app.rate_limiter").warning(
+                        "Redis rate limiter down. Falling back to InMemoryRateLimiter in dev: %s", e
+                    )
+                else:
+                    # Fail closed in staging/production for security-sensitive rate limiting
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail="Rate limiting check failed. Service temporarily unavailable.",
+                    )
+
         await rate_limiter_instance.check_rate_limit(
             key=key,
             max_requests=max_requests,

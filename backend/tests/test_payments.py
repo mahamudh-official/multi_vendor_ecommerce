@@ -219,3 +219,74 @@ async def test_cancelled_order_cannot_be_paid(client: AsyncClient, customer_auth
     r = await client.post(f"/api/v1/payments/orders/{order_id}/create", headers=customer_auth)
     assert r.status_code == 400
 
+
+@pytest.mark.asyncio
+async def test_payment_enum_matching(client: AsyncClient, customer_auth: dict, created_order: dict):
+    """13. Payment and order status enums match correctly in models and schemas."""
+    order_id = created_order["id"]
+    r = await client.post(f"/api/v1/payments/orders/{order_id}/create", headers=customer_auth)
+    assert r.status_code == 201
+    data = r.json()
+    assert data["status"] == "pending"
+
+
+@pytest.mark.asyncio
+async def test_stripe_webhook_succeeded(client: AsyncClient, customer_auth: dict, created_order: dict):
+    """14. Stripe Webhook constructs valid signature and marks payment succeeded."""
+    import hashlib
+    import hmac
+    import json
+    import time
+    from unittest.mock import patch
+
+    order_id = created_order["id"]
+    r_create = await client.post(f"/api/v1/payments/orders/{order_id}/create", headers=customer_auth)
+    assert r_create.status_code == 201
+    pi_id = r_create.json()["provider_payment_id"]
+
+    webhook_secret = "whsec_test_secret_for_webhook_signature_verification"
+    with patch("app.modules.payments.router.settings.stripe_webhook_secret", webhook_secret):
+        payload_data = {
+            "id": "evt_test123",
+            "type": "payment_intent.succeeded",
+            "data": {
+                "object": {
+                    "id": pi_id,
+                    "status": "succeeded",
+                }
+            }
+        }
+        payload_bytes = json.dumps(payload_data).encode("utf-8")
+        timestamp = int(time.time())
+        to_sign = f"{timestamp}.".encode("utf-8") + payload_bytes
+        signature = hmac.new(webhook_secret.encode("utf-8"), to_sign, hashlib.sha256).hexdigest()
+        sig_header = f"t={timestamp},v1={signature}"
+
+        # Valid webhook
+        r_wh = await client.post(
+            "/api/v1/payments/stripe/webhook",
+            content=payload_bytes,
+            headers={"Stripe-Signature": sig_header},
+        )
+        assert r_wh.status_code == 200
+        assert r_wh.json()["status"] == "success"
+
+        # Check order updated to PAID
+        r_order = await client.get(f"/api/v1/orders/{order_id}", headers=customer_auth)
+        assert r_order.status_code == 200
+        assert r_order.json()["payment_status"] == "paid"
+
+
+@pytest.mark.asyncio
+async def test_stripe_webhook_invalid_signature(client: AsyncClient):
+    """15. Stripe Webhook rejects bad signature."""
+    from unittest.mock import patch
+    webhook_secret = "whsec_test_secret_for_webhook_signature_verification"
+    with patch("app.modules.payments.router.settings.stripe_webhook_secret", webhook_secret):
+        r_bad = await client.post(
+            "/api/v1/payments/stripe/webhook",
+            content=b'{"id":"evt_bad"}',
+            headers={"Stripe-Signature": "t=123,v1=invalid_signature"},
+        )
+        assert r_bad.status_code == 400
+

@@ -24,6 +24,15 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout Code
@@ -47,6 +56,9 @@ jobs:
           DATABASE_URL: postgresql+asyncpg://marketplace_user:marketplace_pass@localhost:5432/marketplace_db
           SECRET_KEY: ci-test-secret-key-do-not-use-in-production-min-32-chars
           ENVIRONMENT: test
+          REDIS_URL: redis://localhost:6379/0
+          STRIPE_SECRET_KEY: sk_test_mock_stripe_key_min_32_characters_long_for_security
+          STRIPE_WEBHOOK_SECRET: whsec_mock_webhook_secret_key_minimum_32_characters_for_security
         run: |
           alembic upgrade head
 
@@ -56,6 +68,9 @@ jobs:
           DATABASE_URL: postgresql+asyncpg://marketplace_user:marketplace_pass@localhost:5432/marketplace_db
           SECRET_KEY: ci-test-secret-key-do-not-use-in-production-min-32-chars
           ENVIRONMENT: test
+          REDIS_URL: redis://localhost:6379/0
+          STRIPE_SECRET_KEY: sk_test_mock_stripe_key_min_32_characters_long_for_security
+          STRIPE_WEBHOOK_SECRET: whsec_mock_webhook_secret_key_minimum_32_characters_for_security
         run: |
           pytest -v
 

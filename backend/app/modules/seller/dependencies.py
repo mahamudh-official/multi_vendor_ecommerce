@@ -35,3 +35,15 @@ def get_seller_service(
 
 # Role dependency strictly requiring seller or admin role
 require_seller_role = require_role(UserRole.seller, UserRole.admin)
+
+
+from app.common.exceptions.handlers import ForbiddenException
+from app.modules.auth.models import SellerStatus
+
+async def require_approved_seller(
+    current_user: Annotated[User, Depends(require_seller_role)],
+) -> User:
+    """Enforces that the user has an active, approved seller status if their role is seller."""
+    if current_user.role == UserRole.seller and current_user.seller_status != SellerStatus.approved.value:
+        raise ForbiddenException("Your seller account is not approved or is suspended.")
+    return current_user

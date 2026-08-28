@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.core.config import get_settings
 from app.core.rate_limiter import rate_limit
@@ -89,5 +89,36 @@ async def get_order_payment(
     return await service.get_order_payment(
         user=current_user,
         order_id=order_id,
+    )
+
+
+@payments_router.post(
+    "/stripe/webhook",
+    status_code=status.HTTP_200_OK,
+    summary="Stripe payment event webhook listener",
+)
+async def stripe_webhook(
+    request: Request,
+    service: Annotated[PaymentService, Depends(get_payment_service)],
+) -> dict:
+    sig_header = request.headers.get("Stripe-Signature")
+    if not sig_header:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing Stripe-Signature header.",
+        )
+
+    payload = await request.body()
+    webhook_secret = settings.stripe_webhook_secret
+    if not webhook_secret:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Stripe webhook secret is not configured.",
+        )
+
+    return await service.handle_stripe_webhook(
+        payload=payload,
+        sig_header=sig_header,
+        webhook_secret=webhook_secret,
     )
 

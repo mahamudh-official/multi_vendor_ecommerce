@@ -63,10 +63,15 @@ class User(Base):
         default=UserRole.customer,
         server_default=UserRole.customer.value,
     )
-    seller_status: Mapped[str | None] = mapped_column(
-        String(50),
+    seller_status: Mapped[SellerStatus | None] = mapped_column(
+        ENUM(
+            SellerStatus,
+            name="seller_status_enum",
+            create_type=False,
+            values_callable=lambda x: [e.value for e in x],
+        ),
         nullable=True,
-        default=SellerStatus.approved.value,
+        default=SellerStatus.approved,
         server_default=SellerStatus.approved.value,
         index=True,
     )

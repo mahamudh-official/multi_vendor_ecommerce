@@ -53,13 +53,14 @@ class SellerRepository:
         prod_res = await self.session.execute(prod_stmt)
         prod_row = prod_res.one()
 
-        # 2. Sales sum for non-cancelled orders
+        # 2. Sales sum for non-cancelled and PAID orders
         sales_stmt = (
             select(func.coalesce(func.sum(OrderItem.line_total), Decimal("0.00")))
             .join(Order, OrderItem.order_id == Order.id)
             .where(
                 OrderItem.seller_id == seller_id,
                 Order.status != OrderStatus.CANCELLED,
+                Order.payment_status == PaymentStatus.PAID,
             )
         )
         sales_res = await self.session.execute(sales_stmt)

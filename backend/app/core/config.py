@@ -2,7 +2,7 @@
 Application configuration using pydantic-settings.
 """
 from functools import lru_cache
-from typing import List, Set
+from typing import List, Optional, Set
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -53,6 +53,11 @@ class Settings(BaseSettings):
     rate_limit_payments_per_minute: int = 20
     rate_limit_reviews_per_minute: int = 30
     rate_limit_default_per_minute: int = 120
+
+    # ── External Services ─────────────────────────────────────────────────
+    redis_url: Optional[str] = None
+    stripe_secret_key: Optional[str] = None
+    stripe_webhook_secret: Optional[str] = None
 
     # ── Application ───────────────────────────────────────────────────────
     environment: str = "development"
