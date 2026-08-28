@@ -178,4 +178,11 @@ abstract final class AppTextStyles {
     letterSpacing: 0,
     height: 1.33,
   );
+
+  // ── Convenience Aliases ──────────────────────────────────────────────────
+  static const TextStyle h1 = headlineLarge;
+  static const TextStyle h2 = headlineMedium;
+  static const TextStyle h3 = headlineSmall;
+  static const TextStyle h4 = titleMedium;
+  static const TextStyle caption = bodySmall;
 }

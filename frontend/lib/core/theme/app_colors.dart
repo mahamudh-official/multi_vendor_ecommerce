@@ -111,3 +111,24 @@ abstract final class AppColorsDark {
   static const Color neutral800 = Color(0xFFE5E7EB);
   static const Color neutral900 = Color(0xFFF3F4F6);
 }
+
+/// Universal color token aliases.
+abstract final class AppColors {
+  static const Color primary = AppColorsLight.primary;
+  static const Color accent = AppColorsLight.star;
+  static const Color surface = AppColorsLight.surface;
+  static const Color background = AppColorsLight.background;
+  static const Color textPrimary = AppColorsLight.onSurface;
+  static const Color textSecondary = AppColorsLight.onSurfaceVariant;
+  static const Color border = AppColorsLight.outline;
+  static const Color error = AppColorsLight.error;
+  static const Color success = AppColorsLight.success;
+  static const Color warning = AppColorsLight.warning;
+  static const Color info = AppColorsLight.info;
+
+  static const Color darkSurface = AppColorsDark.surface;
+  static const Color darkBackground = AppColorsDark.background;
+  static const Color darkTextPrimary = AppColorsDark.onSurface;
+  static const Color darkTextSecondary = AppColorsDark.onSurfaceVariant;
+  static const Color darkBorder = AppColorsDark.outline;
+}

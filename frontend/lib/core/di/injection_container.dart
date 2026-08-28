@@ -78,6 +78,13 @@ import '../../features/admin/data/repositories/admin_repository_impl.dart';
 import '../../features/admin/domain/repositories/admin_repository.dart';
 import '../../features/admin/domain/usecases/admin_usecases.dart';
 import '../../features/admin/presentation/bloc/admin_blocs.dart';
+import '../../features/search/presentation/bloc/product_search_bloc.dart';
+import '../../features/reviews/data/datasources/review_remote_datasource.dart';
+import '../../features/reviews/data/repositories/review_repository_impl.dart';
+import '../../features/reviews/domain/repositories/review_repository.dart';
+import '../../features/reviews/domain/usecases/review_usecases.dart';
+import '../../features/reviews/presentation/bloc/my_reviews_bloc.dart';
+import '../../features/reviews/presentation/bloc/review_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -523,6 +530,51 @@ Future<void> configureDependencies() async {
   getIt.registerFactory<AdminAuditLogsBloc>(
     () => AdminAuditLogsBloc(
       getAuditLogsUseCase: getIt<GetAdminAuditLogsUseCase>(),
+    ),
+  );
+
+  // ── Step 9: Reviews & Search ────────────────────────────────────────────────
+  getIt.registerLazySingleton<ReviewRemoteDataSource>(
+    () => ReviewRemoteDataSourceImpl(getIt<DioClient>()),
+  );
+
+  getIt.registerLazySingleton<ReviewRepository>(
+    () => ReviewRepositoryImpl(getIt<ReviewRemoteDataSource>()),
+  );
+
+  getIt.registerLazySingleton<GetProductReviewsUseCase>(
+    () => GetProductReviewsUseCase(getIt<ReviewRepository>()),
+  );
+  getIt.registerLazySingleton<CreateReviewUseCase>(
+    () => CreateReviewUseCase(getIt<ReviewRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateReviewUseCase>(
+    () => UpdateReviewUseCase(getIt<ReviewRepository>()),
+  );
+  getIt.registerLazySingleton<DeleteReviewUseCase>(
+    () => DeleteReviewUseCase(getIt<ReviewRepository>()),
+  );
+  getIt.registerLazySingleton<GetMyReviewsUseCase>(
+    () => GetMyReviewsUseCase(getIt<ReviewRepository>()),
+  );
+
+  getIt.registerFactory<ProductSearchBloc>(
+    () => ProductSearchBloc(getProductsUseCase: getIt<GetProductsUseCase>()),
+  );
+
+  getIt.registerFactory<ReviewBloc>(
+    () => ReviewBloc(
+      getProductReviewsUseCase: getIt<GetProductReviewsUseCase>(),
+      createReviewUseCase: getIt<CreateReviewUseCase>(),
+      updateReviewUseCase: getIt<UpdateReviewUseCase>(),
+      deleteReviewUseCase: getIt<DeleteReviewUseCase>(),
+    ),
+  );
+
+  getIt.registerFactory<MyReviewsBloc>(
+    () => MyReviewsBloc(
+      getMyReviewsUseCase: getIt<GetMyReviewsUseCase>(),
+      deleteReviewUseCase: getIt<DeleteReviewUseCase>(),
     ),
   );
 }

@@ -121,26 +121,32 @@ async def delete_category(
 async def list_products(
     product_service: Annotated[ProductService, Depends(get_product_service)],
     page: int = Query(1, ge=1, description="Page number"),
-    page_size: int = Query(20, ge=1, le=100, description="Items per page"),
-    search: Optional[str] = Query(None, description="Search term in name or description"),
+    page_size: int = Query(20, ge=1, le=50, description="Items per page"),
+    search: Optional[str] = Query(None, description="Search term in name, sku, or description"),
+    q: Optional[str] = Query(None, description="Search query alias for search"),
     category_id: Optional[uuid.UUID] = Query(None, description="Filter by category UUID"),
     seller_id: Optional[uuid.UUID] = Query(None, description="Filter by seller UUID"),
-    min_price: Optional[Decimal] = Query(None, ge=0, description="Minimum price filter"),
-    max_price: Optional[Decimal] = Query(None, ge=0, description="Maximum price filter"),
+    min_price: Optional[Decimal] = Query(None, description="Minimum price filter"),
+    max_price: Optional[Decimal] = Query(None, description="Maximum price filter"),
+    min_rating: Optional[float] = Query(None, description="Minimum average rating (1.0 - 5.0)"),
+    in_stock: Optional[bool] = Query(None, description="Filter for products in stock"),
     is_featured: Optional[bool] = Query(None, description="Filter featured products"),
-    sort: str = Query("newest", description="Sort order: newest, price_asc, price_desc, featured"),
+    sort: str = Query("newest", description="Sort order: newest, oldest, price_low, price_high, rating_high, rating_low, popular, featured"),
 ) -> PaginatedProductsResponse:
     """
     Public endpoint to query marketplace products with search, filtering, and sorting.
     """
+    query_term = q if (q is not None and q.strip()) else search
     return await product_service.list_products(
         page=page,
         page_size=page_size,
-        search=search,
+        search=query_term,
         category_id=category_id,
         seller_id=seller_id,
         min_price=min_price,
         max_price=max_price,
+        min_rating=min_rating,
+        in_stock=in_stock,
         is_featured=is_featured,
         sort=sort,
         include_inactive=False,

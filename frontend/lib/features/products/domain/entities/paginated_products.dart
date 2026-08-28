@@ -10,6 +10,8 @@ class PaginatedProducts extends Equatable {
     required this.pageSize,
     required this.total,
     required this.totalPages,
+    this.hasNext = false,
+    this.hasPrevious = false,
   });
 
   final List<Product> items;
@@ -17,9 +19,19 @@ class PaginatedProducts extends Equatable {
   final int pageSize;
   final int total;
   final int totalPages;
+  final bool hasNext;
+  final bool hasPrevious;
 
-  bool get hasMore => page < totalPages;
+  bool get hasMore => hasNext || page < totalPages;
 
   @override
-  List<Object?> get props => [items, page, pageSize, total, totalPages];
+  List<Object?> get props => [
+    items,
+    page,
+    pageSize,
+    total,
+    totalPages,
+    hasNext,
+    hasPrevious,
+  ];
 }

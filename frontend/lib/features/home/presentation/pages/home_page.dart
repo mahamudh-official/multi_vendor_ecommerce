@@ -149,6 +149,17 @@ class _HomePageState extends State<HomePage> {
                       Expanded(
                         child: TextField(
                           controller: _searchController,
+                          readOnly: false,
+                          onTap: () {
+                            context.push('/search');
+                          },
+                          onSubmitted: (query) {
+                            if (query.trim().isNotEmpty) {
+                              context.push(
+                                '/search?q=${Uri.encodeComponent(query.trim())}',
+                              );
+                            }
+                          },
                           onChanged: _onSearchChanged,
                           decoration: InputDecoration(
                             hintText: 'Search products, brands, tech...',

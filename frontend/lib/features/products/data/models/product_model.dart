@@ -19,6 +19,8 @@ class ProductModel {
     required this.category,
     required this.seller,
     this.images = const [],
+    this.averageRating = 0.0,
+    this.reviewCount = 0,
     required this.createdAt,
   });
 
@@ -34,6 +36,15 @@ class ProductModel {
         : (rawCompare is num
               ? rawCompare.toDouble()
               : double.tryParse(rawCompare.toString()));
+
+    final rawRating = json['average_rating'];
+    final double averageRating = rawRating is num
+        ? rawRating.toDouble()
+        : double.tryParse(rawRating.toString()) ?? 0.0;
+
+    final int reviewCount = json['review_count'] is int
+        ? json['review_count'] as int
+        : int.tryParse(json['review_count']?.toString() ?? '0') ?? 0;
 
     return ProductModel(
       id: json['id'] as String,
@@ -61,6 +72,8 @@ class ProductModel {
               )
               .toList() ??
           [],
+      averageRating: averageRating,
+      reviewCount: reviewCount,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : DateTime.now(),
@@ -81,6 +94,8 @@ class ProductModel {
   final CategoryModel category;
   final SellerSummaryModel seller;
   final List<ProductImageModel> images;
+  final double averageRating;
+  final int reviewCount;
   final DateTime createdAt;
 
   Map<String, dynamic> toJson() {
@@ -99,6 +114,8 @@ class ProductModel {
       'category': category.toJson(),
       'seller': seller.toJson(),
       'images': images.map((img) => img.toJson()).toList(),
+      'average_rating': averageRating,
+      'review_count': reviewCount,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -119,6 +136,8 @@ class ProductModel {
       category: category.toEntity(),
       seller: seller.toEntity(),
       images: images.map((img) => img.toEntity()).toList(),
+      averageRating: averageRating,
+      reviewCount: reviewCount,
       createdAt: createdAt,
     );
   }

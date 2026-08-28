@@ -11,6 +11,12 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../cart/presentation/bloc/cart_bloc.dart';
 import '../../../cart/presentation/bloc/cart_event.dart';
+import '../../../reviews/presentation/bloc/review_bloc.dart';
+import '../../../reviews/presentation/bloc/review_event.dart';
+import '../../../reviews/presentation/bloc/review_state.dart';
+import '../../../reviews/presentation/widgets/rating_distribution_widget.dart';
+import '../../../reviews/presentation/widgets/review_card_widget.dart';
+import '../../../reviews/presentation/widgets/write_review_modal.dart';
 import '../../../wishlist/presentation/bloc/wishlist_bloc.dart';
 import '../../../wishlist/presentation/bloc/wishlist_event.dart';
 import '../../../wishlist/presentation/bloc/wishlist_state.dart';
@@ -36,6 +42,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   void initState() {
     super.initState();
     _productFuture = _fetchProduct();
+    context.read<ReviewBloc>().add(
+      LoadProductReviews(productId: widget.productId),
+    );
   }
 
   Future<Product> _fetchProduct() async {
@@ -405,6 +414,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                               ),
                             ),
                             const SizedBox(height: AppSpacing.xl2),
+
+                            // ── Customer Reviews Section ─────────────────────
+                            _buildReviewsSection(context, product),
+                            const SizedBox(height: AppSpacing.xl2),
                           ],
                         ),
                       ),
@@ -510,6 +523,114 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildReviewsSection(BuildContext context, Product product) {
+    final theme = Theme.of(context);
+
+    return BlocBuilder<ReviewBloc, ReviewState>(
+      builder: (context, reviewState) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Customer Reviews', style: AppTextStyles.titleMedium),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    final authState = context.read<AuthBloc>().state;
+                    if (authState is! Authenticated) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please sign in to write a review.'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                      return;
+                    }
+
+                    WriteReviewModal.show(
+                      context,
+                      productName: product.name,
+                      onSubmit: (rating, title, comment) async {
+                        context.read<ReviewBloc>().add(
+                          SubmitReview(
+                            productId: product.id,
+                            rating: rating,
+                            title: title,
+                            comment: comment,
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  icon: const Icon(Icons.rate_review, size: 16),
+                  label: const Text('Write Review'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // Rating Distribution Overview
+            RatingDistributionWidget(
+              averageRating: reviewState.averageRating > 0
+                  ? reviewState.averageRating
+                  : product.averageRating,
+              reviewCount: reviewState.reviewCount > 0
+                  ? reviewState.reviewCount
+                  : product.reviewCount,
+              distribution: reviewState.ratingDistribution,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Review List
+            if (reviewState.isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(AppSpacing.md),
+                  child: CircularProgressIndicator.adaptive(),
+                ),
+              )
+            else if (reviewState.reviews.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                child: Center(
+                  child: Text(
+                    'No reviews yet. Be the first to review this product!',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              )
+            else ...[
+              for (final review in reviewState.reviews)
+                ReviewCardWidget(review: review),
+              if (reviewState.hasNext)
+                Center(
+                  child: TextButton(
+                    onPressed: () {
+                      context.read<ReviewBloc>().add(
+                        const LoadMoreProductReviews(),
+                      );
+                    },
+                    child: reviewState.isLoadingMore
+                        ? const CircularProgressIndicator.adaptive()
+                        : const Text('Load More Reviews'),
+                  ),
+                ),
+            ],
+          ],
+        );
+      },
     );
   }
 }

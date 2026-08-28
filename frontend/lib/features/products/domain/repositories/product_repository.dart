@@ -12,6 +12,8 @@ abstract interface class ProductRepository {
     String? sellerId,
     double? minPrice,
     double? maxPrice,
+    double? minRating,
+    bool? inStock,
     bool? isFeatured,
     String sort = 'newest',
   });
@@ -42,8 +44,8 @@ abstract interface class ProductRepository {
     String? categoryId,
     String? imageUrl,
     List<String>? images,
-    bool? isFeatured,
     bool? isActive,
+    bool? isFeatured,
   });
 
   Future<Result<void>> deleteProduct(String id);

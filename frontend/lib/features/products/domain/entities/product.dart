@@ -21,6 +21,8 @@ class Product extends Equatable {
     required this.category,
     required this.seller,
     this.images = const [],
+    this.averageRating = 0.0,
+    this.reviewCount = 0,
     required this.createdAt,
   });
 
@@ -38,6 +40,8 @@ class Product extends Equatable {
   final Category category;
   final SellerSummary seller;
   final List<ProductImage> images;
+  final double averageRating;
+  final int reviewCount;
   final DateTime createdAt;
 
   bool get inStock => stockQuantity > 0;
@@ -64,6 +68,8 @@ class Product extends Equatable {
     category,
     seller,
     images,
+    averageRating,
+    reviewCount,
     createdAt,
   ];
 }

@@ -21,6 +21,8 @@ class ProductRepositoryImpl implements ProductRepository {
     String? sellerId,
     double? minPrice,
     double? maxPrice,
+    double? minRating,
+    bool? inStock,
     bool? isFeatured,
     String sort = 'newest',
   }) async {
@@ -33,6 +35,8 @@ class ProductRepositoryImpl implements ProductRepository {
         sellerId: sellerId,
         minPrice: minPrice,
         maxPrice: maxPrice,
+        minRating: minRating,
+        inStock: inStock,
         isFeatured: isFeatured,
         sort: sort,
       );

@@ -13,6 +13,8 @@ abstract interface class ProductRemoteDataSource {
     String? sellerId,
     double? minPrice,
     double? maxPrice,
+    double? minRating,
+    bool? inStock,
     bool? isFeatured,
     String sort = 'newest',
   });
@@ -44,6 +46,8 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     String? sellerId,
     double? minPrice,
     double? maxPrice,
+    double? minRating,
+    bool? inStock,
     bool? isFeatured,
     String sort = 'newest',
   }) async {
@@ -67,6 +71,12 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     }
     if (maxPrice != null) {
       queryParams['max_price'] = maxPrice;
+    }
+    if (minRating != null) {
+      queryParams['min_rating'] = minRating;
+    }
+    if (inStock != null) {
+      queryParams['in_stock'] = inStock;
     }
     if (isFeatured != null) {
       queryParams['is_featured'] = isFeatured;
@@ -111,6 +121,6 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
 
   @override
   Future<void> deleteProduct(String id) async {
-    await _dioClient.delete<Map<String, dynamic>>('/api/v1/products/$id');
+    await _dioClient.delete<dynamic>('/api/v1/products/$id');
   }
 }

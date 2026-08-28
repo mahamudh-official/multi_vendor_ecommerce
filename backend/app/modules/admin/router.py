@@ -21,6 +21,9 @@ from app.modules.admin.schemas import (
     AdminProductListResponse,
     AdminProductRead,
     AdminProductUpdateStatus,
+    AdminReviewListResponse,
+    AdminReviewRead,
+    AdminReviewStatusUpdate,
     AdminSellerListResponse,
     AdminSellerRead,
     AdminSellerUpdateStatus,
@@ -32,6 +35,8 @@ from app.modules.admin.service import AdminService
 from app.modules.audit.schemas import AuditLogListResponse
 from app.modules.audit.service import AuditService
 from app.modules.auth.models import User
+from app.modules.reviews.dependencies import get_review_service
+from app.modules.reviews.service import ReviewService
 
 router = APIRouter(
     prefix="/admin",
@@ -359,4 +364,54 @@ async def list_audit_logs(
         page=page,
         page_size=page_size,
     )
+
+
+# ── 9. Review Moderation ──────────────────────────────────────────────────────
+
+@router.get(
+    "/reviews",
+    response_model=AdminReviewListResponse,
+    summary="List platform reviews for moderation",
+)
+async def list_admin_reviews(
+    service: Annotated[ReviewService, Depends(get_review_service)],
+    is_approved: Optional[bool] = Query(None, description="Filter by approval status"),
+    product_id: Optional[uuid.UUID] = Query(None, description="Filter by product UUID"),
+    user_id: Optional[uuid.UUID] = Query(None, description="Filter by user UUID"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=50),
+) -> AdminReviewListResponse:
+    items, total, total_pages = await service.admin_list_reviews(
+        page=page,
+        page_size=page_size,
+        is_approved=is_approved,
+        product_id=product_id,
+        user_id=user_id,
+    )
+    return AdminReviewListResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+    )
+
+
+@router.patch(
+    "/reviews/{review_id}/status",
+    response_model=AdminReviewRead,
+    summary="Moderate review approval status",
+)
+async def moderate_review(
+    review_id: uuid.UUID,
+    data: AdminReviewStatusUpdate,
+    service: Annotated[ReviewService, Depends(get_review_service)],
+    admin_user: Annotated[User, Depends(require_admin)],
+) -> AdminReviewRead:
+    return await service.admin_moderate_review(
+        admin_user=admin_user,
+        review_id=review_id,
+        request=data,
+    )
+
 

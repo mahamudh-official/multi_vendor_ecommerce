@@ -159,6 +159,8 @@ class ProductRead(BaseModel):
     category: CategoryRead
     seller: SellerSummary
     images: list[ProductImageRead] = Field(default_factory=list)
+    average_rating: float = 0.0
+    review_count: int = 0
     created_at: datetime
     updated_at: datetime
 
@@ -172,4 +174,6 @@ class PaginatedProductsResponse(BaseModel):
     page_size: int
     total: int
     total_pages: int
+    has_next: bool = False
+    has_previous: bool = False
 

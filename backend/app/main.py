@@ -18,6 +18,7 @@ from app.modules.notifications.router import notifications_router
 from app.modules.orders.router import order_router
 from app.modules.payments.router import payments_router
 from app.modules.products.router import router as products_router
+from app.modules.reviews.router import reviews_router
 from app.modules.seller.router import seller_router
 
 logger = logging.getLogger(__name__)
@@ -82,6 +83,7 @@ register_exception_handlers(app)
 # ── Routers ────────────────────────────────────────────────────────────────
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(products_router, prefix="/api/v1")
+app.include_router(reviews_router, prefix="/api/v1")
 app.include_router(cart_router, prefix="/api/v1")
 app.include_router(wishlist_router, prefix="/api/v1")
 app.include_router(order_router, prefix="/api/v1")

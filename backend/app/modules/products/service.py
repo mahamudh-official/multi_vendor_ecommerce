@@ -134,15 +134,37 @@ class ProductService:
         seller_id: Optional[uuid.UUID] = None,
         min_price: Optional[Decimal] = None,
         max_price: Optional[Decimal] = None,
+        min_rating: Optional[float] = None,
+        in_stock: Optional[bool] = None,
         is_featured: Optional[bool] = None,
         sort: str = "newest",
         include_inactive: bool = False,
     ) -> PaginatedProductsResponse:
-        """Query paginated products with validation on sort and page bounds."""
-        # Sanitize parameters
-        page = max(1, page)
-        page_size = min(max(1, page_size), 100)
-        allowed_sorts = {"newest", "price_asc", "price_desc", "featured"}
+        """Query paginated products with validation on sort, price ranges, and page bounds."""
+        if page < 1:
+            raise BadRequestException(detail="Page number must be at least 1.")
+        if min_price is not None and min_price < 0:
+            raise BadRequestException(detail="min_price cannot be negative.")
+        if max_price is not None and max_price < 0:
+            raise BadRequestException(detail="max_price cannot be negative.")
+        if min_price is not None and max_price is not None and min_price > max_price:
+            raise BadRequestException(detail="min_price cannot be greater than max_price.")
+        if min_rating is not None and (min_rating < 1.0 or min_rating > 5.0):
+            raise BadRequestException(detail="min_rating must be between 1.0 and 5.0.")
+
+        page_size = min(max(1, page_size), 50)
+        allowed_sorts = {
+            "newest",
+            "oldest",
+            "price_low",
+            "price_asc",
+            "price_high",
+            "price_desc",
+            "rating_high",
+            "rating_low",
+            "popular",
+            "featured",
+        }
         if sort not in allowed_sorts:
             sort = "newest"
 
@@ -154,12 +176,16 @@ class ProductService:
             seller_id=seller_id,
             min_price=min_price,
             max_price=max_price,
+            min_rating=min_rating,
+            in_stock=in_stock,
             is_featured=is_featured,
             sort=sort,
             include_inactive=include_inactive,
         )
 
         total_pages = math.ceil(total / page_size) if total > 0 else 0
+        has_next = page < total_pages
+        has_previous = page > 1 and total_pages > 0
 
         return PaginatedProductsResponse(
             items=[ProductRead.model_validate(p) for p in products],
@@ -167,6 +193,8 @@ class ProductService:
             page_size=page_size,
             total=total,
             total_pages=total_pages,
+            has_next=has_next,
+            has_previous=has_previous,
         )
 
     async def get_product(

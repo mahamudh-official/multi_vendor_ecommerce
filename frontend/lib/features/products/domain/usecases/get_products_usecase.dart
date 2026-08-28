@@ -16,6 +16,8 @@ class GetProductsUseCase {
     String? sellerId,
     double? minPrice,
     double? maxPrice,
+    double? minRating,
+    bool? inStock,
     bool? isFeatured,
     String sort = 'newest',
   }) {
@@ -27,6 +29,8 @@ class GetProductsUseCase {
       sellerId: sellerId,
       minPrice: minPrice,
       maxPrice: maxPrice,
+      minRating: minRating,
+      inStock: inStock,
       isFeatured: isFeatured,
       sort: sort,
     );

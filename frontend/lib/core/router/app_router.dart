@@ -14,6 +14,8 @@ import '../../features/payment/presentation/pages/payment_failure_page.dart';
 import '../../features/payment/presentation/pages/payment_page.dart';
 import '../../features/payment/presentation/pages/payment_success_page.dart';
 import '../../features/products/presentation/pages/product_details_page.dart';
+import '../../features/reviews/presentation/pages/my_reviews_page.dart';
+import '../../features/search/presentation/pages/search_page.dart';
 import '../../features/seller/presentation/pages/create_product_page.dart';
 import '../../features/seller/presentation/pages/edit_product_page.dart';
 import '../../features/seller/presentation/pages/seller_dashboard_page.dart';
@@ -41,6 +43,8 @@ abstract final class AppRoutes {
   static const String login = '/auth/login';
   static const String register = '/auth/register';
   static const String home = '/home';
+  static const String search = '/search';
+  static const String myReviews = '/my-reviews';
   static const String cart = '/cart';
   static const String wishlist = '/wishlist';
   static const String checkout = '/checkout';
@@ -133,6 +137,32 @@ final GoRouter appRouter = GoRouter(
         key: state.pageKey,
         child: const HomePage(),
         transitionsBuilder: _fadeTransition,
+      ),
+    ),
+
+    // ── Search & Filter ──────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.search,
+      name: 'search',
+      pageBuilder: (context, state) {
+        final query = state.uri.queryParameters['q'];
+        final categoryId = state.uri.queryParameters['category_id'];
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: SearchPage(initialQuery: query, initialCategoryId: categoryId),
+          transitionsBuilder: _fadeTransition,
+        );
+      },
+    ),
+
+    // ── My Reviews ───────────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.myReviews,
+      name: 'my-reviews',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const MyReviewsPage(),
+        transitionsBuilder: _slideRightTransition,
       ),
     ),
 

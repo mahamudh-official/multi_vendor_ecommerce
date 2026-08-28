@@ -16,6 +16,9 @@ import '../features/products/presentation/bloc/seller/seller_product_bloc.dart';
 import '../features/payment/presentation/bloc/payment_bloc.dart';
 import '../features/notifications/presentation/bloc/notification_bloc.dart';
 import '../features/admin/presentation/bloc/admin_blocs.dart';
+import '../features/search/presentation/bloc/product_search_bloc.dart';
+import '../features/reviews/presentation/bloc/my_reviews_bloc.dart';
+import '../features/reviews/presentation/bloc/review_bloc.dart';
 import '../features/seller/presentation/bloc/seller_dashboard/seller_dashboard_bloc.dart';
 import '../features/seller/presentation/bloc/seller_orders/seller_orders_bloc.dart';
 import '../features/seller/presentation/bloc/seller_products/seller_products_bloc.dart';
@@ -25,7 +28,7 @@ import '../features/wishlist/presentation/bloc/wishlist_event.dart';
 /// Root application widget.
 ///
 /// Wires together:
-/// - MultiBlocProvider (Auth, Catalog, Cart, Wishlist, Order, Seller, Payment, Notification, Admin BLoCs)
+/// - MultiBlocProvider (Auth, Catalog, Cart, Wishlist, Order, Seller, Payment, Notification, Admin, Search, Review BLoCs)
 /// - go_router (declarative routing)
 /// - Material 3 light / dark theme
 class MarketoApp extends StatelessWidget {
@@ -44,6 +47,11 @@ class MarketoApp extends StatelessWidget {
         BlocProvider<CartBloc>(create: (_) => getIt<CartBloc>()),
         BlocProvider<WishlistBloc>(create: (_) => getIt<WishlistBloc>()),
         BlocProvider<OrderBloc>(create: (_) => getIt<OrderBloc>()),
+        BlocProvider<ProductSearchBloc>(
+          create: (_) => getIt<ProductSearchBloc>(),
+        ),
+        BlocProvider<ReviewBloc>(create: (_) => getIt<ReviewBloc>()),
+        BlocProvider<MyReviewsBloc>(create: (_) => getIt<MyReviewsBloc>()),
         BlocProvider<SellerDashboardBloc>(
           create: (_) => getIt<SellerDashboardBloc>(),
         ),

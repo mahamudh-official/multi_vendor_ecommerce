@@ -146,9 +146,12 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
     int pageSize = 20,
   }) async {
     final query = <String, dynamic>{'page': page, 'page_size': pageSize};
-    if (search != null && search.isNotEmpty) query['search'] = search;
-    if (sellerStatus != null && sellerStatus.isNotEmpty)
+    if (search != null && search.isNotEmpty) {
+      query['search'] = search;
+    }
+    if (sellerStatus != null && sellerStatus.isNotEmpty) {
       query['seller_status'] = sellerStatus;
+    }
 
     final response = await dio.get('/admin/sellers', queryParameters: query);
     final items = response.data['items'] as List<dynamic>? ?? [];

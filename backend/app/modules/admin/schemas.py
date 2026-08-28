@@ -170,6 +170,39 @@ class AdminCategoryListResponse(BaseModel):
     total: int
 
 
+# ── Review Moderation ─────────────────────────────────────────────────────────
+
+class AdminReviewRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    product_id: uuid.UUID
+    product_name: Optional[str] = None
+    user_id: uuid.UUID
+    user_name: str
+    order_item_id: uuid.UUID
+    rating: int
+    title: Optional[str] = None
+    comment: Optional[str] = None
+    is_verified_purchase: bool
+    is_approved: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class AdminReviewListResponse(BaseModel):
+    items: List[AdminReviewRead]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+class AdminReviewStatusUpdate(BaseModel):
+    is_approved: bool
+
+
+
 # ── Order Management ──────────────────────────────────────────────────────────
 
 class AdminOrderItemRead(BaseModel):

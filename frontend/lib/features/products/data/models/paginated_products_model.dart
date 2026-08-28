@@ -9,6 +9,8 @@ class PaginatedProductsModel {
     required this.pageSize,
     required this.total,
     required this.totalPages,
+    this.hasNext = false,
+    this.hasPrevious = false,
   });
 
   factory PaginatedProductsModel.fromJson(Map<String, dynamic> json) {
@@ -21,6 +23,8 @@ class PaginatedProductsModel {
       pageSize: json['page_size'] as int? ?? 20,
       total: json['total'] as int? ?? 0,
       totalPages: json['total_pages'] as int? ?? 0,
+      hasNext: json['has_next'] as bool? ?? false,
+      hasPrevious: json['has_previous'] as bool? ?? false,
     );
   }
 
@@ -29,6 +33,8 @@ class PaginatedProductsModel {
   final int pageSize;
   final int total;
   final int totalPages;
+  final bool hasNext;
+  final bool hasPrevious;
 
   PaginatedProducts toEntity() {
     return PaginatedProducts(
@@ -37,6 +43,8 @@ class PaginatedProductsModel {
       pageSize: pageSize,
       total: total,
       totalPages: totalPages,
+      hasNext: hasNext,
+      hasPrevious: hasPrevious,
     );
   }
 }
